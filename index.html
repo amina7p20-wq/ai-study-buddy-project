@@ -1,0 +1,90 @@
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>AI Study Buddy</title>
+
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <div class="container">
+
+        <h1>AI Study Buddy</h1>
+
+        <p class="subtitle">
+            Your personal AI-powered study companion.
+        </p>
+
+        <h2>What do you want to study today?</h2>
+
+        <p class="description">
+            Ask questions, generate quizzes, and make studying easier.
+        </p>
+
+
+        <!-- AI QUESTION BOX -->
+
+        <div class="ask-box">
+
+            <input
+                type="text"
+                placeholder="Ask me anything about your studies..."
+            >
+
+            <button>Ask AI</button>
+
+        </div>
+
+
+        <!-- AI ANSWER -->
+
+        <div id="answer"></div>
+
+
+        <!-- FEATURES -->
+
+        <div class="features">
+
+            <div class="card" onclick="studyNotes()">
+                <div class="icon">📚</div>
+                <h3>Study Notes</h3>
+                <p>Get simple explanations for any topic.</p>
+            </div>
+
+
+            <div class="card" onclick="mcqQuiz()">
+                <div class="icon">🧠</div>
+                <h3>MCQs & Quizzes</h3>
+                <p>Practice and test your knowledge.</p>
+            </div>
+
+
+            <div class="card" onclick="studyPlanner()">
+                <div class="icon">📅</div>
+                <h3>Study Planner</h3>
+                <p>Plan your study schedule.</p>
+            </div>
+
+
+            <div class="card" onclick="showMessage('Quick Help')">
+                <div class="icon">💡</div>
+                <h3>Quick Help</h3>
+                <p>Get instant help with your doubts.</p>
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <script src="script.js"></script>
+
+</body>
+
+</html>

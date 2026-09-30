@@ -1,0 +1,334 @@
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    padding: 0;
+
+    background-color: #f3efff;
+
+    font-family: Arial, sans-serif;
+
+    color: #2e1065;
+}
+
+
+.container {
+    width: 100%;
+    max-width: 1100px;
+
+    margin: 0 auto;
+
+    padding: 50px 30px;
+
+    text-align: center;
+}
+
+
+/* TITLE */
+
+h1 {
+    margin: 0;
+
+    color: #5b21b6;
+
+    font-size: 42px;
+}
+
+
+.subtitle {
+    margin-top: 10px;
+    margin-bottom: 35px;
+
+    color: #6b21a8;
+
+    font-size: 18px;
+}
+
+
+h2 {
+    margin-bottom: 10px;
+
+    color: #6d28d9;
+
+    font-size: 26px;
+}
+
+
+.description {
+    margin-bottom: 25px;
+
+    color: #4c1d95;
+
+    font-size: 17px;
+}
+
+
+/* ASK AI */
+
+.ask-box {
+    display: flex;
+
+    justify-content: center;
+    align-items: center;
+
+    gap: 10px;
+
+    margin: 25px auto;
+
+    width: 100%;
+    max-width: 650px;
+}
+
+
+.ask-box input {
+    flex: 1;
+
+    padding: 14px 16px;
+
+    border: 2px solid #8b5cf6;
+
+    border-radius: 10px;
+
+    outline: none;
+
+    font-size: 15px;
+}
+
+
+.ask-box input:focus {
+    border-color: #6d28d9;
+}
+
+
+.ask-box button {
+    padding: 14px 22px;
+
+    background-color: #7c3aed;
+
+    color: white;
+
+    border: none;
+
+    border-radius: 10px;
+
+    font-size: 15px;
+
+    cursor: pointer;
+}
+
+
+.ask-box button:hover {
+    background-color: #6d28d9;
+}
+
+
+/* AI ANSWER */
+
+#answer {
+    width: 100%;
+
+    max-width: 800px;
+
+    min-height: 50px;
+
+    margin: 30px auto;
+
+    padding: 20px;
+
+    background-color: white;
+
+    border-radius: 16px;
+
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+
+    text-align: left;
+
+    line-height: 1.7;
+
+    font-size: 16px;
+}
+
+
+/* FEATURE CARDS */
+
+.features {
+    display: grid;
+
+    grid-template-columns: repeat(4, 1fr);
+
+    gap: 25px;
+
+    width: 100%;
+
+    margin-top: 45px;
+}
+
+
+.card {
+    width: 100%;
+
+    min-height: 210px;
+
+    padding: 25px 20px;
+
+    background-color: white;
+
+    border-radius: 18px;
+
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+
+    display: flex;
+
+    flex-direction: column;
+
+    align-items: center;
+
+    justify-content: center;
+
+    text-align: center;
+
+    cursor: pointer;
+
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+
+.card:hover {
+    transform: translateY(-6px);
+
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.12);
+}
+
+
+.icon {
+    font-size: 40px;
+
+    margin-bottom: 12px;
+}
+
+
+.card h3 {
+    margin: 5px 0 10px;
+
+    color: #5b21b6;
+
+    font-size: 19px;
+}
+
+
+.card p {
+    margin: 0;
+
+    color: #6b21a8;
+
+    font-size: 14px;
+
+    line-height: 1.5;
+}
+
+
+/* TABLET */
+
+@media (max-width: 900px) {
+
+    .features {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+}
+
+
+/* MOBILE */
+
+@media (max-width: 600px) {
+
+    .container {
+        padding: 35px 20px;
+    }
+
+
+    h1 {
+        font-size: 34px;
+    }
+
+
+    .ask-box {
+        flex-direction: column;
+    }
+
+
+    .ask-box input {
+        width: 100%;
+    }
+
+
+    .ask-box button {
+        width: 100%;
+    }
+
+
+    .features {
+        grid-template-columns: 1fr;
+    }
+
+}
+.quiz-card {
+    background-color: #faf8ff;
+    padding: 25px;
+    margin-bottom: 25px;
+    border-radius: 16px;
+    border: 1px solid #e9ddff;
+}
+
+.quiz-card h3 {
+    color: #4c1d95;
+    margin-top: 0;
+    margin-bottom: 20px;
+}
+
+.quiz-option {
+    display: block;
+    width: 100%;
+    margin: 10px 0;
+    padding: 12px 15px;
+
+    background-color: white;
+    color: #4c1d95;
+
+    border: 2px solid #ddd0ff;
+    border-radius: 10px;
+
+    text-align: left;
+    cursor: pointer;
+}
+
+.quiz-option:hover {
+    background-color: #f3efff;
+}
+
+.quiz-option.correct {
+    background-color: #dcfce7;
+    border-color: #22c55e;
+    color: #166534;
+}
+
+.quiz-option.wrong {
+    background-color: #fee2e2;
+    border-color: #ef4444;
+    color: #991b1b;
+}
+
+.quiz-result {
+    font-weight: bold;
+    margin-top: 15px;
+}
+
+.quiz-explanation {
+    background-color: white;
+    padding: 12px;
+    border-radius: 10px;
+    margin-top: 10px;
+}
