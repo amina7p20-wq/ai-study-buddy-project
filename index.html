@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StudyFlow | One step closer, every day.</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <!-- Markdown Parser -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+</head>
+<body>
+
+
+    
+    <!-- BRAND HEADER -->
+    <header class="app-header">
+        <div class="header-content">
+            <div class="brand">StudyFlow</div>
+            <div class="tagline">One step closer, every day.</div>
+        </div>
+    </header>
+
+    <main class="container">
+        
+        <!-- HERO / WELCOME -->
+        <section class="hero compact-hero">
+            <h1 class="brand-title">StudyFlow</h1>
+            <h2 class="hero-subtitle">Turn confusion into clarity, one topic at a time.</h2>
+            <p class="hero-tagline">One step closer, every day.</p>
+        </section>
+
+        <!-- COMPACT ASK AI BOX -->
+        <div class="ask-box compact-ask-box">
+            <input type="text" placeholder="What would you like to learn about?">
+            <button>Start</button>
+        </div>
+
+        <!-- MODE INDICATOR -->
+        <div id="mode-indicator-container" style="display: none;">
+            <span id="mode-badge"></span>
+            <button id="reset-mode-btn" onclick="resetMode()">✕ Reset</button>
+        </div>
+
+        <!-- FEATURES -->
+        <div class="features">
+            <div class="card" onclick="studyNotes()">
+                <div class="icon-wrapper"><span class="icon">📚</span></div>
+                <h3>Study Notes</h3>
+                <p>Turn difficult topics into simple notes.</p>
+                <div class="card-action">Start &rarr;</div>
+            </div>
+
+            <div class="card" onclick="mcqQuiz()">
+                <div class="icon-wrapper"><span class="icon">🧠</span></div>
+                <h3>Practice MCQs</h3>
+                <p>Test what you actually remember.</p>
+                <div class="card-action">Start &rarr;</div>
+            </div>
+
+            <div class="card" onclick="studyPlanner()">
+                <div class="icon-wrapper"><span class="icon">📅</span></div>
+                <h3>Study Planner</h3>
+                <p>Turn your syllabus into a plan.</p>
+                <div class="card-action">Start &rarr;</div>
+            </div>
+
+            <div class="card" onclick="quickHelp()">
+                <div class="icon-wrapper"><span class="icon">💡</span></div>
+                <h3>Quick Help</h3>
+                <p>Get a simple explanation when you're stuck.</p>
+                <div class="card-action">Start &rarr;</div>
+            </div>
+        </div>
+
+        <!-- YOUR STUDY FLOW DIAGRAM -->
+        <section class="study-flow-diagram">
+            <div class="flow-step">
+                <h4>Learn</h4>
+                <p>Generate notes and explanations</p>
+            </div>
+            <div class="flow-arrow">&rarr;</div>
+            <div class="flow-step">
+                <h4>Practice</h4>
+                <p>Take MCQs and flashcards</p>
+            </div>
+            <div class="flow-arrow">&rarr;</div>
+            <div class="flow-step">
+                <h4>Improve</h4>
+                <p>Revise and strengthen weak areas</p>
+            </div>
+        </section>
+
+        <!-- AI ANSWER -->
+        <div id="answer"></div>
+
+    </main>
+
+    <script src="script.js"></script>
+</body>
+</html>

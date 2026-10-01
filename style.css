@@ -1,0 +1,566 @@
+/* DESIGN SYSTEM (CSS VARIABLES) */
+:root {
+    --bg-color: #F7F3F1;
+    --card-bg: #FFFFFF;
+    --primary: #800000;
+    --primary-dark: #5C0000;
+    --primary-light: #A52A2A;
+    --text-main: #292020;
+    --text-sec: #6B5A5A;
+    --success: #22C55E;
+    --error: #EF4444;
+    
+    /* Additional structural colors */
+    --border-color: #D8BFC0;
+    --card-hover: #FFFDFD;
+}
+
+/* RESET & BASE */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    background-color: var(--bg-color);
+    /* Soft tonal variations and premium dot grid */
+    background-image: 
+        radial-gradient(circle at 15% 50%, rgba(128, 0, 0, 0.02) 0%, transparent 50%),
+        radial-gradient(circle at 85% 20%, rgba(128, 0, 0, 0.02) 0%, transparent 50%),
+        radial-gradient(var(--border-color) 1px, transparent 1px);
+    background-size: 100% 100%, 100% 100%, 24px 24px;
+    font-family: 'Inter', sans-serif;
+    color: var(--text-main);
+    font-size: 14px; /* Scaled down base font */
+    min-height: 100vh;
+    line-height: 1.5;
+    position: relative;
+    overflow-x: hidden;
+}
+
+
+
+/* HEADER */
+.app-header {
+    background-color: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(5px);
+    border-bottom: 1px solid var(--border-color);
+    border-top: 3px solid var(--primary);
+    padding: 10px 0; /* Compact */
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+.header-content {
+    max-width: 1050px;
+    margin: 0 auto;
+    padding: 0 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.brand {
+    font-size: 16px; /* Compact */
+    font-weight: 800;
+    color: var(--primary);
+    letter-spacing: -0.5px;
+}
+
+.tagline {
+    font-size: 12px; /* Compact */
+    color: var(--text-sec);
+    font-weight: 500;
+}
+
+/* CONTAINER */
+.container {
+    width: 100%;
+    max-width: 900px; /* Tighter layout */
+    margin: 0 auto;
+    padding: 32px 24px;
+}
+
+/* HERO (DASHBOARD COMPACT) */
+.hero.compact-hero {
+    text-align: center;
+    margin-bottom: 24px;
+}
+
+.brand-title {
+    font-size: 26px; /* Compact */
+    font-weight: 800;
+    color: var(--primary);
+    margin-bottom: 4px;
+    letter-spacing: -0.5px;
+}
+
+.hero-subtitle {
+    font-size: 15px; /* Compact */
+    font-weight: 600;
+    color: var(--text-main);
+    margin-bottom: 4px;
+}
+
+.hero-tagline {
+    font-size: 11px; /* Compact */
+    color: var(--text-sec);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-weight: 600;
+}
+
+/* ASK AI BOX (COMPACT COMMAND BAR) */
+.ask-box.compact-ask-box {
+    display: flex;
+    justify-content: center;
+    align-items: stretch;
+    gap: 6px;
+    width: 100%;
+    max-width: 500px; /* Very compact */
+    margin: 0 auto 24px auto;
+}
+
+.compact-ask-box input {
+    flex: 1;
+    padding: 8px 12px; /* Tighter */
+    background-color: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    color: var(--text-main);
+    font-size: 13px; /* Smaller */
+    font-family: inherit;
+    outline: none;
+    transition: all 0.2s ease;
+    box-shadow: inset 0 1px 3px rgba(128, 0, 0, 0.02);
+}
+
+.compact-ask-box input::placeholder {
+    color: var(--text-sec);
+}
+
+.compact-ask-box input:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 2px rgba(128, 0, 0, 0.15);
+}
+
+.compact-ask-box button {
+    padding: 0 16px;
+    background-color: var(--primary);
+    color: #FFFFFF;
+    border: none;
+    border-radius: 6px;
+    font-size: 12.5px; /* Compact */
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-family: inherit;
+}
+
+.compact-ask-box button:hover {
+    background-color: var(--primary-dark);
+}
+
+/* MODE INDICATOR */
+#mode-indicator-container {
+    margin: 0 auto 24px auto;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+}
+
+#mode-badge {
+    background-color: var(--primary);
+    color: #FFFFFF;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 600;
+}
+
+#reset-mode-btn {
+    background-color: transparent;
+    color: var(--primary);
+    border: 1px solid var(--primary-light);
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+#reset-mode-btn:hover {
+    background-color: rgba(128, 0, 0, 0.05);
+    color: var(--primary-dark);
+    border-color: var(--primary-dark);
+}
+
+/* FEATURES GRID */
+.features {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px; /* Tighter gap */
+    margin-bottom: 32px;
+}
+
+/* FEATURE CARDS (COMPACT) */
+.card {
+    background-color: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    padding: 12px 16px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 1px 2px rgba(128, 0, 0, 0.015);
+    display: flex;
+    flex-direction: column;
+}
+
+.card:hover {
+    border-color: var(--primary-light);
+    transform: translateY(-1px);
+    box-shadow: 0 3px 8px rgba(128, 0, 0, 0.03);
+}
+
+.card.active {
+    border-color: var(--primary);
+    background-color: rgba(128, 0, 0, 0.02);
+}
+
+/* ICON WRAPPER */
+.icon-wrapper {
+    width: 32px;
+    height: 32px;
+    margin: 0 auto 8px auto;
+    background-color: rgba(128, 0, 0, 0.04);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.2s ease;
+}
+
+.card:hover .icon-wrapper {
+    background-color: rgba(128, 0, 0, 0.06);
+}
+
+.icon {
+    font-size: 14px;
+    color: var(--primary);
+}
+
+.card h3 {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-main);
+    margin-bottom: 4px;
+    transition: color 0.2s ease;
+}
+
+.card:hover h3, .card.active h3 {
+    color: var(--primary);
+}
+
+.card p {
+    font-size: 11px;
+    color: var(--text-sec);
+    line-height: 1.35;
+    flex-grow: 1;
+}
+
+/* START CUE */
+.card-action {
+    margin-top: 10px;
+    font-size: 10.5px;
+    font-weight: 500;
+    color: var(--primary);
+    transition: all 0.2s ease;
+    opacity: 0.8;
+}
+
+.card:hover .card-action {
+    opacity: 1;
+    transform: translateX(2px);
+}
+
+/* STUDY FLOW DIAGRAM (REFINED SUBTLE SECTION) */
+.study-flow-diagram {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 12px;
+    margin: 0 auto 32px auto;
+    padding: 12px 16px; 
+    background-color: transparent;
+    border: none;
+    border-top: 1px solid rgba(216, 191, 192, 0.3); /* D8BFC0 border subtly faded */
+    max-width: 550px;
+}
+
+.flow-step {
+    text-align: center;
+    flex: 1;
+}
+
+.flow-step h4 {
+    color: var(--primary);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 2px;
+    font-weight: 600;
+}
+
+.flow-step p {
+    font-size: 10.5px;
+    color: var(--text-sec);
+    line-height: 1.25;
+}
+
+.flow-arrow {
+    color: var(--border-color);
+    font-size: 12px;
+    opacity: 0.6;
+}
+
+/* AI ANSWER AREA (FOCUSED READING WIDTH) */
+#answer {
+    width: 100%;
+    max-width: 750px; /* Elegant reading width */
+    margin: 0 auto;
+    padding: 24px 28px; /* Compact */
+    background-color: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    box-shadow: 0 2px 12px -2px rgba(128, 0, 0, 0.04); /* Fainter */
+    text-align: left;
+    line-height: 1.6;
+    font-size: 13.5px; /* Compact comfortable text */
+    color: var(--text-main);
+    border-top: 3px solid var(--primary-light);
+}
+
+#answer:empty {
+    display: none;
+}
+
+#answer p {
+    margin-bottom: 14px;
+}
+
+#answer p:last-child {
+    margin-bottom: 0;
+}
+
+/* QUIZ CARDS (COMPACTED & REFINED) */
+.quiz-card {
+    background-color: var(--bg-color);
+    padding: 16px 20px; /* Smaller */
+    margin-bottom: 16px; /* Tighter */
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+}
+
+.quiz-card h3 {
+    color: var(--primary-dark);
+    margin-top: 0;
+    margin-bottom: 12px; /* Tighter */
+    font-size: 14px; /* Scaled down question text */
+    font-weight: 700;
+    line-height: 1.4;
+}
+
+.quiz-option {
+    display: block;
+    width: 100%;
+    margin: 6px 0; /* Tighter gaps */
+    padding: 10px 14px; /* Less padding inside options */
+    background-color: var(--card-bg);
+    color: var(--text-main);
+    border: 1px solid var(--border-color);
+    border-radius: 6px; /* Sharper */
+    text-align: left;
+    cursor: pointer;
+    font-size: 13px; /* Smaller option text */
+    font-family: inherit;
+    transition: all 0.2s ease;
+}
+
+.quiz-option:hover {
+    background-color: var(--card-hover);
+    border-color: var(--primary-light);
+    color: var(--primary-dark);
+}
+
+.quiz-option.correct {
+    background-color: rgba(34, 197, 94, 0.08); /* More subtle */
+    border-color: var(--success);
+    color: #166534;
+}
+
+.quiz-option.wrong {
+    background-color: rgba(239, 68, 68, 0.08); /* More subtle */
+    border-color: var(--error);
+    color: #991B1B;
+}
+
+.quiz-result {
+    font-weight: 700;
+    margin-top: 16px;
+    font-size: 13.5px; /* Compact */
+    color: var(--primary);
+}
+
+.quiz-explanation {
+    background-color: var(--card-hover);
+    padding: 12px 16px; /* Compact */
+    border-radius: 6px;
+    margin-top: 12px; /* Tighter */
+    border-left: 3px solid var(--primary);
+    font-size: 12.5px; /* Smaller reading text */
+    color: var(--text-main);
+    line-height: 1.5;
+}
+
+/* RESPONSIVE */
+@media (max-width: 900px) {
+    .features {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    .study-flow-diagram { 
+        flex-direction: column; 
+        gap: 12px; 
+    }
+    .flow-arrow { 
+        transform: rotate(90deg); 
+    }
+}
+
+@media (max-width: 600px) {
+    .container {
+        padding: 24px 16px;
+    }
+    .brand-title {
+        font-size: 24px;
+    }
+    .header-content {
+        flex-direction: column;
+        gap: 6px;
+    }
+    .features {
+        grid-template-columns: 1fr;
+    }
+    .ask-box.compact-ask-box {
+        flex-direction: column;
+    }
+    .compact-ask-box input, .compact-ask-box button {
+        width: 100%;
+        padding: 12px;
+    }
+}
+
+/* MARKDOWN CONTENT AND COPY BUTTON */
+#answer {
+    position: relative;
+}
+
+.copy-btn {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    background-color: rgba(128, 0, 0, 0.05);
+    color: var(--primary);
+    border: 1px solid var(--primary-light);
+    border-radius: 4px;
+    padding: 4px 10px;
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.copy-btn:hover {
+    background-color: var(--primary);
+    color: #FFFFFF;
+}
+
+/* Markdown styling inside answer */
+.markdown-body h1, .markdown-body h2, .markdown-body h3 {
+    color: var(--primary-dark);
+    margin-top: 16px;
+    margin-bottom: 8px;
+    font-size: 1.1em;
+}
+
+.markdown-body ul, .markdown-body ol {
+    margin-left: 20px;
+    margin-bottom: 14px;
+}
+
+.markdown-body li {
+    margin-bottom: 4px;
+}
+
+.markdown-body strong {
+    color: var(--primary-dark);
+}
+
+.markdown-body pre {
+    background-color: var(--bg-color);
+    padding: 12px;
+    border-radius: 6px;
+    overflow-x: auto;
+    margin-bottom: 14px;
+    border: 1px solid var(--border-color);
+}
+
+.markdown-body code {
+    font-family: monospace;
+    background-color: var(--bg-color);
+    padding: 2px 4px;
+    border-radius: 4px;
+}
+
+.loading-indicator {
+    color: var(--text-sec);
+    font-style: italic;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* INTERACTIVE QUIZ COMPONENTS */
+.quiz-progress {
+    font-size: 11px;
+    color: var(--text-sec);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 8px;
+    font-weight: 600;
+}
+
+.quiz-next-btn {
+    margin-top: 16px;
+    background-color: var(--primary);
+    color: #FFF;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: inline-block;
+}
+
+.quiz-next-btn:hover {
+    background-color: var(--primary-dark);
+}
