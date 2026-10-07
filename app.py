@@ -30,14 +30,16 @@ client = genai.Client(api_key=api_key)
 @app.route("/ask", methods=["POST"])
 def ask():
     data = request.json
-    question = data["question"]
+    question = data.get("question", "")
     mode = data.get("mode", "normal")
+    context = data.get("context", "")
+    action = data.get("action", "")
+    language = data.get("language", "")
+    notes = data.get("notes", "")
 
     if mode == "notes":
         prompt = f"""
-Create simple and easy-to-understand study notes about:
-
-{question}
+Create simple and easy-to-understand study notes about: {question}
 
 Use:
 - Clear headings
@@ -66,28 +68,20 @@ You MUST return ONLY valid JSON in this exact structure, with no markdown format
     }}
   ]
 }}
-Keep the questions suitable for a student.
 """
     elif mode == "planner":
         prompt = f"""
-Create a clear, structured, and easy-to-follow study plan for a student about:
-
-{question}
+Create a clear, structured, and easy-to-follow study plan for a student about: {question}
 
 Follow these guidelines:
 - Break the study schedule down day-by-day (e.g. Day 1, Day 2, etc.) or into clear phases based on the student's timeframe.
-- For each day, include:
-  * Focus Topic
-  * Key Tasks (2-3 realistic goals)
-  * Practice or Review activity
+- For each day, include: Focus Topic, Key Tasks (2-3 realistic goals), Practice or Review activity.
 - Add quick study tips at the end.
 - Use simple bullet points and encouraging language.
 """
     elif mode == "quick-help":
         prompt = f"""
-Explain the following topic simply, as if to a confused student.
-
-Topic: {question}
+Explain the following topic simply, as if to a confused student: {question}
 
 Guidelines:
 - Use simple language and short paragraphs.
@@ -95,19 +89,129 @@ Guidelines:
 - Use a relatable analogy if it helps.
 - Give a simple example.
 - Avoid unnecessary technical language.
-- Keep the explanation concise and focused on understanding rather than memorization.
+- Keep the explanation concise.
+"""
+    elif mode == "flashcards":
+        prompt = f"""
+Create exactly 8 flashcards about: {question}
+
+You MUST return ONLY valid JSON in this exact structure, with no markdown formatting:
+{{
+  "cards": [
+    {{
+      "front": "Question or term here",
+      "back": "Short answer or definition here"
+    }}
+  ]
+}}
+"""
+    elif mode == "answer-practice-q":
+        prompt = f"""
+Generate ONE descriptive, thought-provoking question for a student to answer about: {question}.
+Difficulty: {context if context else 'medium'}.
+Do NOT provide the answer. Just ask the question.
+"""
+    elif mode == "answer-practice-eval":
+        prompt = f"""
+Evaluate the student's answer to this question:
+Question: {context}
+Student's Answer: {question}
+
+You MUST return ONLY valid JSON in this exact structure:
+{{
+  "score": "X/10",
+  "correct": "What they got right...",
+  "missing": "What they missed...",
+  "improved": "An example of a perfect short answer...",
+  "explanation": "Brief encouraging feedback..."
+}}
+"""
+    elif mode == "mock-test-gen":
+        prompt = f"""
+Generate a mock test about: {question}
+Include exactly 5 MCQs and 2 short-answer questions.
+You MUST return ONLY valid JSON in this exact structure:
+{{
+  "mcqs": [
+    {{
+      "question": "...",
+      "options": [
+        {{"letter": "A", "text": "..."}},
+        {{"letter": "B", "text": "..."}},
+        {{"letter": "C", "text": "..."}},
+        {{"letter": "D", "text": "..."}}
+      ],
+      "correctAnswer": "A",
+      "explanation": "..."
+    }}
+  ],
+  "short_answers": [
+    {{
+      "question": "..."
+    }}
+  ]
+}}
+"""
+    elif mode == "mock-test-eval":
+        prompt = f"""
+Evaluate the student's short answers for a mock test.
+Data: {question}
+
+You MUST return ONLY valid JSON in this exact structure:
+{{
+  "evaluations": [
+    {{
+      "score": "X/10",
+      "feedback": "..."
+    }}
+  ]
+}}
+"""
+    elif mode == "code-helper":
+        prompt = f"""
+Act as a helpful programming tutor.
+Language: {language}
+Action requested: {action}
+Code/Question: {question}
+
+Guidelines:
+- Explain clearly and simply.
+- Format code cleanly.
+- If finding a bug, explain WHY it's a bug before giving the solution.
+- Keep it encouraging.
+"""
+    elif mode == "maths-solver":
+        prompt = f"""
+Act as a helpful math tutor. Solve this problem: {question}
+
+Guidelines:
+- Provide the final answer clearly.
+- Provide a step-by-step explanation.
+- Mention any formulas used.
+- Do not just give the answer without the steps.
+- If the problem is unclear, state your assumptions.
+"""
+    elif mode == "ask-my-notes":
+        prompt = f"""
+You are a helpful study buddy. The student is asking a question based on their saved notes.
+Notes:
+{notes}
+
+Student's Question: {question}
+
+Guidelines:
+- Answer the question based PRIMARILY on the provided notes.
+- If the notes don't contain the answer, you can use your general knowledge but mention that it wasn't in the notes.
+- Keep it clear and concise.
 """
     else:
         prompt = f"""
-Answer the following question for a student:
-
-{question}
+Answer the following question for a student: {question}
 
 Guidelines:
 - Use clear headings, short paragraphs, and bullet points where useful.
 - Highlight important terms using bold.
 - Provide examples when useful.
-- Adapt the structure naturally to the question (e.g., short answers for factual questions, structured answers for complex topics).
 """
 
     try:
@@ -117,14 +221,16 @@ Guidelines:
         )
         answer = response.text
         
-        if mode == "mcq":
+        json_modes = ["mcq", "flashcards", "answer-practice-eval", "mock-test-gen", "mock-test-eval"]
+        
+        if mode in json_modes:
             import json
             clean_json = answer.strip()
-            if clean_json.startswith("```json"):
+            if clean_json.startswith("`json"):
                 clean_json = clean_json[7:]
-            elif clean_json.startswith("```"):
+            elif clean_json.startswith("`"):
                 clean_json = clean_json[3:]
-            if clean_json.endswith("```"):
+            if clean_json.endswith("`"):
                 clean_json = clean_json[:-3]
             clean_json = clean_json.strip()
             
@@ -133,7 +239,6 @@ Guidelines:
             
         return jsonify({"answer": answer})
     except Exception as e:
-        # Returning a proper JSON error prevents CORS Network Errors on the frontend
         return jsonify({"error": str(e)}), 500
 
 @app.route("/summarize-pdf", methods=["POST"])
@@ -197,5 +302,39 @@ Extracted PDF content:
     except Exception as e:
         return jsonify({"error": "Failed to process PDF: " + str(e)}), 500
 
+
+@app.route("/image-q", methods=["POST"])
+def image_q():
+    if 'file' not in request.files:
+        return jsonify({"error": "No file uploaded."}), 400
+    
+    file = request.files['file']
+    action = request.form.get('action', 'explain')
+    
+    if file.filename == '':
+        return jsonify({"error": "No selected file."}), 400
+        
+    file_bytes = file.read()
+    if len(file_bytes) > 5 * 1024 * 1024:
+        return jsonify({"error": "File is too large. Max size is 5MB."}), 400
+
+    prompt = "Explain this image in detail for a student."
+    if action == "quiz":
+        prompt = "Create 3 practice questions based on this image. Provide the questions first, then the answers below."
+
+    try:
+        from google.genai import types
+        part = types.Part.from_bytes(data=file_bytes, mime_type=file.mimetype)
+        
+        response = client.models.generate_content(
+            model="gemini-2.5-flash",
+            contents=[prompt, part]
+        )
+        return jsonify({"answer": response.text})
+
+    except Exception as e:
+        return jsonify({"error": "Failed to process image: " + str(e)}), 500
+
 if __name__ == "__main__":
+
     app.run(debug=True)

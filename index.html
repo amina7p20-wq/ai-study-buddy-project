@@ -26,23 +26,23 @@
                 <a href="#" class="menu-item active" data-page="home"><span class="icon">🏠</span> Home</a>
                 <a href="#" class="menu-item" data-page="ai-notes"><span class="icon">📝</span> AI Notes</a>
                 <a href="#" class="menu-item" data-page="pdf-summarizer"><span class="icon">📄</span> PDF Summarizer</a>
-                <a href="#" class="menu-item" data-page="coming-soon" data-title="Ask My Notes"><span class="icon">💬</span> Ask My Notes</a>
-                <a href="#" class="menu-item" data-page="study-path"><span class="icon">🛤️</span> Study Path</a>
+                <a href="#" class="menu-item" data-page="ask-my-notes"><span class="icon">📚</span> Ask My Notes</a>
+                <a href="#" class="menu-item" data-page="study-path"><span class="icon">🗺️</span> Study Path</a>
             </div>
             
             <div class="menu-section">
                 <div class="menu-title">PRACTICE</div>
-                <a href="#" class="menu-item" data-page="mcqs"><span class="icon">🧠</span> Practice MCQs</a>
-                <a href="#" class="menu-item" data-page="coming-soon" data-title="Flashcards"><span class="icon">📇</span> Flashcards</a>
-                <a href="#" class="menu-item" data-page="coming-soon" data-title="Answer Practice"><span class="icon">✍️</span> Answer Practice</a>
-                <a href="#" class="menu-item" data-page="coming-soon" data-title="Mock Test"><span class="icon">⏱️</span> Mock Test</a>
+                <a href="#" class="menu-item" data-page="mcqs"><span class="icon">✅</span> Practice MCQs</a>
+                <a href="#" class="menu-item" data-page="flashcards"><span class="icon">🃏</span> Flashcards</a>
+                <a href="#" class="menu-item" data-page="answer-practice"><span class="icon">✍️</span> Answer Practice</a>
+                <a href="#" class="menu-item" data-page="mock-test"><span class="icon">📝</span> Mock Test</a>
             </div>
             
             <div class="menu-section">
                 <div class="menu-title">IMPROVE</div>
                 <a href="#" class="menu-item" data-page="smart-revision"><span class="icon">🔄</span> Smart Revision</a>
-                <a href="#" class="menu-item" data-page="weak-topics"><span class="icon">📉</span> Weak Topics</a>
-                <a href="#" class="menu-item" data-page="progress"><span class="icon">📊</span> Progress</a>
+                <a href="#" class="menu-item" data-page="weak-topics"><span class="icon">🎯</span> Weak Topics</a>
+                <a href="#" class="menu-item" data-page="progress"><span class="icon">📈</span> Progress</a>
                 <a href="#" class="menu-item" data-page="streak"><span class="icon">🔥</span> Streak</a>
             </div>
             
@@ -50,7 +50,11 @@
                 <div class="menu-title">TOOLS</div>
                 <a href="#" class="menu-item" data-page="quick-help"><span class="icon">💡</span> Quick Help</a>
                 <a href="#" class="menu-item" data-page="planner"><span class="icon">📅</span> Study Planner</a>
-                <a href="#" class="menu-item" data-page="coming-soon" data-title="All Tools"><span class="icon">🛠️</span> More Tools</a>
+                <a href="#" class="menu-item" data-page="code-helper"><span class="icon">💻</span> Code Helper</a>
+                <a href="#" class="menu-item" data-page="maths-solver"><span class="icon">➗</span> Maths Solver</a>
+                <a href="#" class="menu-item" data-page="image-q"><span class="icon">🖼️</span> Image to Question</a>
+                <a href="#" class="menu-item" data-page="voice-tutor"><span class="icon">🎙️</span> Voice Tutor</a>
+
             </div>
         </div>
     </aside>
@@ -87,6 +91,21 @@
                 <div class="hero-section">
                     <h1>Good Morning! 👋</h1>
                     <p>Small steps every day lead to big results. Keep going!</p>
+                </div>
+
+                <div class="section-title">Ask Your Study Assistant</div>
+                <div class="dashboard-card assistant-card" style="margin-bottom: 32px; max-width: 800px; margin-left: auto; margin-right: auto;">
+                    <div class="ask-box">
+                        <input type="text" id="home-ask-input" placeholder="Ask anything... (e.g. Explain recursion)" />
+                        <button id="home-ask-btn">Ask Now</button>
+                    </div>
+                    <div class="assistant-suggestions">
+                        <span onclick="setHomeAsk('Explain this in simple terms')">Explain this in simple terms</span>
+                        <span onclick="setHomeAsk('Give me a real-life example')">Give me a real-life example</span>
+                        <span onclick="setHomeAsk('Summarize this')">Summarize this</span>
+                        <span onclick="setHomeAsk('What should I study next?')">What should I study next?</span>
+                    </div>
+                    <div id="home-answer" class="ai-answer-area"></div>
                 </div>
 
                 <div class="section-title">Quick Actions</div>
@@ -159,20 +178,7 @@
                     <!-- Injected by JS -->
                 </div>
 
-                <div class="section-title mt-4">Ask Your Study Assistant</div>
-                <div class="dashboard-card assistant-card">
-                    <div class="ask-box">
-                        <input type="text" id="home-ask-input" placeholder="Ask anything... (e.g. Explain recursion)" />
-                        <button id="home-ask-btn">Ask Now</button>
-                    </div>
-                    <div class="assistant-suggestions">
-                        <span onclick="setHomeAsk('Explain this in simple terms')">Explain this in simple terms</span>
-                        <span onclick="setHomeAsk('Give me a real-life example')">Give me a real-life example</span>
-                        <span onclick="setHomeAsk('Summarize this')">Summarize this</span>
-                        <span onclick="setHomeAsk('What should I study next?')">What should I study next?</span>
-                    </div>
-                    <div id="home-answer" class="ai-answer-area"></div>
-                </div>
+
             </div>
 
             <!-- ============================== -->
@@ -180,7 +186,7 @@
             <!-- ============================== -->
             <div id="page-ai-notes" class="page">
                 <div class="page-header">
-                    <h2>AI Notes</h2>
+                    <h2>📝 AI Notes</h2>
                     <p>Generate highly structured, easy-to-understand notes for any topic.</p>
                 </div>
                 
@@ -205,7 +211,7 @@
             <!-- ============================== -->
             <div id="page-pdf-summarizer" class="page">
                 <div class="page-header">
-                    <h2>PDF Summarizer</h2>
+                    <h2>📄 PDF Summarizer</h2>
                     <p>Upload a PDF document to generate an AI-powered summary and study guide.</p>
                 </div>
                 
@@ -231,7 +237,7 @@
             <!-- ============================== -->
             <div id="page-mcqs" class="page">
                 <div class="page-header">
-                    <h2>Practice MCQs</h2>
+                    <h2>✅ Practice MCQs</h2>
                     <p>Test your knowledge with 5 targeted AI-generated questions.</p>
                 </div>
                 
@@ -250,7 +256,7 @@
             <!-- ============================== -->
             <div id="page-planner" class="page">
                 <div class="page-header">
-                    <h2>Study Planner</h2>
+                    <h2>📅 Study Planner</h2>
                     <p>Create a structured day-by-day plan to tackle your syllabus.</p>
                 </div>
                 
@@ -269,7 +275,7 @@
             <!-- ============================== -->
             <div id="page-quick-help" class="page">
                 <div class="page-header">
-                    <h2>Quick Help</h2>
+                    <h2>💡 Quick Help</h2>
                     <p>Get ELI5 (Explain Like I'm 5) explanations for complex topics.</p>
                 </div>
                 
@@ -288,7 +294,7 @@
             <!-- ============================== -->
             <div id="page-study-path" class="page">
                 <div class="page-header">
-                    <h2>Your Study Path</h2>
+                    <h2>🗺️ Your Study Path</h2>
                     <p>Track your curriculum step-by-step.</p>
                 </div>
                 <div class="dashboard-card" style="max-width: 600px; margin: 0 auto;">
@@ -303,7 +309,7 @@
             <!-- ============================== -->
             <div id="page-progress" class="page">
                 <div class="page-header">
-                    <h2>Progress Dashboard</h2>
+                    <h2>📈 Progress Dashboard</h2>
                     <p>Track your learning journey over time.</p>
                 </div>
                 <div class="grid-3">
@@ -331,7 +337,7 @@
             <!-- ============================== -->
             <div id="page-weak-topics" class="page">
                 <div class="page-header">
-                    <h2>Weak Topics</h2>
+                    <h2>🎯 Weak Topics</h2>
                     <p>Areas that need more revision based on your quiz results.</p>
                 </div>
                 <div class="dashboard-card">
@@ -356,7 +362,7 @@
             <!-- ============================== -->
             <div id="page-smart-revision" class="page">
                 <div class="page-header">
-                    <h2>Smart Revision</h2>
+                    <h2>🔄 Smart Revision</h2>
                     <p>Recommended topics to review today based on your history.</p>
                 </div>
                 <div class="grid-3" id="revision-list">
@@ -369,7 +375,7 @@
             <!-- ============================== -->
             <div id="page-streak" class="page">
                 <div class="page-header">
-                    <h2>Study Streak</h2>
+                    <h2>🔥 Study Streak</h2>
                     <p>Consistency beats cramming.</p>
                 </div>
                 <div class="grid-2">
@@ -386,6 +392,182 @@
                 </div>
             </div>
 
+
+            <!-- ============================== -->
+            <!-- PAGE: ASK MY NOTES             -->
+            <!-- ============================== -->
+            <div id="page-ask-my-notes" class="page">
+                <div class="page-header">
+                    <h2>📚 Ask My Notes</h2>
+                    <p>Ask questions directly about the last topic you generated notes for.</p>
+                </div>
+                <div class="dashboard-card form-card">
+                    <div id="ask-notes-status" style="margin-bottom: 16px; font-size: 13px; color: var(--text-sec); font-weight: 600;">No notes saved yet. Generate notes first!</div>
+                    <div class="ask-box">
+                        <input type="text" id="ask-notes-input" placeholder="Ask a question about your notes..." />
+                        <button id="ask-notes-btn">Ask</button>
+                    </div>
+                </div>
+                <div id="ask-notes-answer" class="ai-answer-area mt-4"></div>
+            </div>
+
+            <!-- ============================== -->
+            <!-- PAGE: FLASHCARDS               -->
+            <!-- ============================== -->
+            <div id="page-flashcards" class="page">
+                <div class="page-header">
+                    <h2>🃏 Flashcards</h2>
+                    <p>Generate interactive flashcards for any topic to test your memory.</p>
+                </div>
+                <div class="dashboard-card form-card">
+                    <div class="ask-box">
+                        <input type="text" id="fc-input" placeholder="Enter a topic (e.g. World War 2)" />
+                        <button id="fc-btn">Generate</button>
+                    </div>
+                </div>
+                <div id="fc-loading" class="ai-answer-area mt-4" style="display:none;"><div class="loading-indicator">Generating flashcards...</div></div>
+                <div id="fc-container" class="mt-4" style="display:none; text-align: center;">
+                    <div style="font-size: 13px; color: var(--text-sec); margin-bottom: 12px; font-weight: 600;" id="fc-progress">Card 1 of 8</div>
+                    <div id="fc-card" class="flashcard dashboard-card" style="min-height: 200px; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 18px; font-weight: 500; transition: transform 0.3s;">
+                        <div id="fc-text"></div>
+                    </div>
+                    <div style="margin-top: 16px; display: flex; justify-content: center; gap: 12px;">
+                        <button id="fc-prev" class="primary-btn" style="background: var(--text-sec);">Previous</button>
+                        <button id="fc-flip" class="primary-btn">Flip Card</button>
+                        <button id="fc-next" class="primary-btn">Next</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ============================== -->
+            <!-- PAGE: ANSWER PRACTICE          -->
+            <!-- ============================== -->
+            <div id="page-answer-practice" class="page">
+                <div class="page-header">
+                    <h2>✍️ Answer Practice</h2>
+                    <p>Answer descriptive questions and get instant AI feedback on how to improve.</p>
+                </div>
+                <div class="dashboard-card form-card">
+                    <div class="ask-box">
+                        <input type="text" id="ap-input" placeholder="Enter a topic to practice..." />
+                        <select id="ap-diff" style="border:none; padding: 0 12px; border-left: 1px solid var(--border-color); outline:none; font-family:inherit; color:var(--text-sec); background: white;">
+                            <option value="easy">Easy</option>
+                            <option value="medium" selected>Medium</option>
+                            <option value="hard">Hard</option>
+                        </select>
+                        <button id="ap-btn">Get Question</button>
+                    </div>
+                </div>
+                <div id="ap-workspace" class="dashboard-card mt-4" style="display: none;">
+                    <h3 id="ap-question-text" style="margin-bottom: 16px; font-size: 16px; color: var(--primary-dark);"></h3>
+                    <textarea id="ap-answer-input" rows="5" placeholder="Type your answer here..." style="width: 100%; border: 1px solid var(--border-color); border-radius: 6px; padding: 12px; font-family: inherit; font-size: 14px; margin-bottom: 16px; outline: none;"></textarea>
+                    <button id="ap-submit-btn" class="primary-btn">Submit for Review</button>
+                </div>
+                <div id="ap-feedback" class="mt-4" style="display: none;"></div>
+            </div>
+
+            <!-- ============================== -->
+            <!-- PAGE: MOCK TEST                -->
+            <!-- ============================== -->
+            <div id="page-mock-test" class="page">
+                <div class="page-header">
+                    <h2>📝 Mock Test</h2>
+                    <p>Take a mini-test containing MCQs and short answers.</p>
+                </div>
+                <div class="dashboard-card form-card">
+                    <div class="ask-box">
+                        <input type="text" id="mt-input" placeholder="Enter a subject for your test..." />
+                        <button id="mt-btn">Start Test</button>
+                    </div>
+                </div>
+                <div id="mt-loading" class="ai-answer-area mt-4" style="display:none;"><div class="loading-indicator">Generating your test...</div></div>
+                <div id="mt-workspace" class="mt-4" style="display: none;">
+                    <!-- Injected by JS -->
+                </div>
+            </div>
+
+            <!-- ============================== -->
+            <!-- PAGE: CODE HELPER              -->
+            <!-- ============================== -->
+            <div id="page-code-helper" class="page">
+                <div class="page-header">
+                    <h2>💻 Code Helper</h2>
+                    <p>Your personal programming assistant.</p>
+                </div>
+                <div class="dashboard-card form-card">
+                    <div style="display:flex; gap:12px; margin-bottom: 12px;">
+                        <input type="text" id="ch-lang" placeholder="Language (e.g. Python)" style="flex: 1; padding: 10px; border: 1px solid var(--border-color); border-radius: 6px; font-family: inherit;" />
+                        <select id="ch-action" style="flex: 2; padding: 10px; border: 1px solid var(--border-color); border-radius: 6px; font-family: inherit;">
+                            <option value="explain code">Explain Code</option>
+                            <option value="find bug">Find Bug</option>
+                            <option value="improve code">Improve Code</option>
+                            <option value="generate simple example">Generate Example</option>
+                        </select>
+                    </div>
+                    <textarea id="ch-input" rows="6" placeholder="Paste your code or ask a question..." style="width: 100%; border: 1px solid var(--border-color); border-radius: 6px; padding: 12px; font-family: inherit; font-size: 13px; margin-bottom: 12px;"></textarea>
+                    <button id="ch-btn" class="primary-btn" style="width: 100%;">Get Help</button>
+                </div>
+                <div id="ch-answer" class="ai-answer-area mt-4"></div>
+            </div>
+
+            <!-- ============================== -->
+            <!-- PAGE: MATHS SOLVER             -->
+            <!-- ============================== -->
+            <div id="page-maths-solver" class="page">
+                <div class="page-header">
+                    <h2>➗ Maths Solver</h2>
+                    <p>Get step-by-step solutions to math problems.</p>
+                </div>
+                <div class="dashboard-card form-card">
+                    <textarea id="ms-input" rows="4" placeholder="Type your math problem here..." style="width: 100%; border: 1px solid var(--border-color); border-radius: 6px; padding: 12px; font-family: inherit; font-size: 14px; margin-bottom: 12px;"></textarea>
+                    <button id="ms-btn" class="primary-btn" style="width: 100%;">Solve Step-by-Step</button>
+                </div>
+                <div id="ms-answer" class="ai-answer-area mt-4"></div>
+            </div>
+
+
+            <!-- ============================== -->
+            <!-- PAGE: IMAGE TO QUESTION        -->
+            <!-- ============================== -->
+            <div id="page-image-q" class="page">
+                <div class="page-header">
+                    <h2>🖼️ Image to Question</h2>
+                    <p>Upload a diagram or picture of your notes, and let AI explain it or quiz you on it.</p>
+                </div>
+                <div class="dashboard-card form-card">
+                    <div class="file-upload-box" style="border: 2px dashed var(--border-color); padding: 32px; text-align: center; border-radius: 8px; margin-bottom: 16px; cursor: pointer; position: relative;">
+                        <input type="file" id="iq-file" accept="image/png, image/jpeg" style="opacity: 0; position: absolute; top: 0; left: 0; width: 100%; height: 100%; cursor: pointer;" />
+                        <div style="font-size: 32px; margin-bottom: 12px;">🖼️</div>
+                        <h4 id="iq-file-name">Click to upload an image (JPG/PNG)</h4>
+                    </div>
+                    <select id="iq-action" style="width: 100%; padding: 12px; border: 1px solid var(--border-color); border-radius: 6px; font-family: inherit; margin-bottom: 16px;">
+                        <option value="explain">Explain this image</option>
+                        <option value="quiz">Create questions from this image</option>
+                    </select>
+                    <button id="iq-btn" class="primary-btn" style="width: 100%;" disabled>Analyze Image</button>
+                    <button id="iq-clear-btn" style="width: 100%; padding: 12px; margin-top: 8px; background: transparent; border: 1px solid var(--border-color); border-radius: 6px; cursor: pointer; display: none;">Clear</button>
+                </div>
+                <div id="iq-answer" class="ai-answer-area mt-4"></div>
+            </div>
+
+            <!-- ============================== -->
+            <!-- PAGE: VOICE TUTOR              -->
+            <!-- ============================== -->
+            <div id="page-voice-tutor" class="page">
+                <div class="page-header">
+                    <h2>🎙️ Voice Tutor</h2>
+                    <p>Practice speaking and listening. Ask questions with your voice.</p>
+                </div>
+                <div class="dashboard-card" style="text-align: center; padding: 48px 24px;">
+                    <div id="vt-status" style="margin-bottom: 24px; color: var(--text-sec);">Click the microphone to start speaking...</div>
+                    <button id="vt-mic-btn" style="width: 80px; height: 80px; border-radius: 50%; background: var(--primary); color: white; border: none; font-size: 32px; cursor: pointer; box-shadow: 0 4px 12px rgba(128,0,0,0.2); transition: transform 0.2s;">🎙️</button>
+                    <div id="vt-text-fallback" style="margin-top: 32px;">
+                        <input type="text" id="vt-input" placeholder="Or type your question here..." style="width: 80%; max-width: 400px; padding: 12px; border: 1px solid var(--border-color); border-radius: 6px; font-family: inherit; margin-right: 8px;" />
+                        <button id="vt-send-btn" class="primary-btn">Send</button>
+                    </div>
+                </div>
+                <div id="vt-answer" class="ai-answer-area mt-4"></div>
+            </div>
             <!-- ============================== -->
             <!-- PAGE: COMING SOON              -->
             <!-- ============================== -->
