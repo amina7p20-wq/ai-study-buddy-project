@@ -136,5 +136,66 @@ Guidelines:
         # Returning a proper JSON error prevents CORS Network Errors on the frontend
         return jsonify({"error": str(e)}), 500
 
+@app.route("/summarize-pdf", methods=["POST"])
+def summarize_pdf():
+    if 'file' not in request.files:
+        return jsonify({"error": "No file uploaded."}), 400
+    
+    file = request.files['file']
+    if file.filename == '':
+        return jsonify({"error": "No selected file."}), 400
+        
+    if not file.filename.lower().endswith('.pdf'):
+        return jsonify({"error": "Invalid file format. Please upload a PDF."}), 400
+
+    file_bytes = file.read()
+    if len(file_bytes) > 5 * 1024 * 1024:
+        return jsonify({"error": "File is too large. Max size is 5MB."}), 400
+
+    if len(file_bytes) == 0:
+        return jsonify({"error": "The uploaded PDF is empty."}), 400
+
+    try:
+        import io
+        import pypdf
+        reader = pypdf.PdfReader(io.BytesIO(file_bytes))
+        
+        if len(reader.pages) > 20:
+            return jsonify({"error": "PDF is too long. Max limit is 20 pages."}), 400
+
+        extracted_text = ""
+        for page in reader.pages:
+            text = page.extract_text()
+            if text:
+                extracted_text += text + "\n"
+        
+        extracted_text = extracted_text.strip()
+        
+        if not extracted_text:
+            return jsonify({"error": "No readable text found in PDF. Scanned images (OCR) are not currently supported."}), 400
+            
+        prompt = f"""
+Turn the following extracted PDF content into useful study material.
+
+Guidelines:
+- Give a short overview.
+- Identify the important concepts.
+- Create clear headings and bullet points.
+- Highlight important definitions, formulas, dates, or facts when present.
+- Keep the explanation student-friendly.
+- Do not invent information that is not present in the PDF.
+
+Extracted PDF content:
+{extracted_text}
+"""
+        response = client.models.generate_content(
+            model="gemini-flash-lite-latest",
+            contents=prompt
+        )
+        return jsonify({"answer": response.text})
+
+    except Exception as e:
+        return jsonify({"error": "Failed to process PDF: " + str(e)}), 500
+
 if __name__ == "__main__":
     app.run(debug=True)

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>StudyFlow | One step closer, every day.</title>
+    <title>StudyFlow | Study Dashboard</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
     <!-- Markdown Parser -->
@@ -11,91 +11,397 @@
 </head>
 <body>
 
-
+<div class="app-container">
     
-    <!-- BRAND HEADER -->
-    <header class="app-header">
-        <div class="header-content">
-            <div class="brand">StudyFlow</div>
-            <div class="tagline">One step closer, every day.</div>
+    <!-- SIDEBAR -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <h2 class="brand">StudyFlow</h2>
+            <p class="brand-tagline">Turn confusion into clarity.</p>
         </div>
-    </header>
-
-    <main class="container">
         
-        <!-- HERO / WELCOME -->
-        <section class="hero compact-hero">
-            <h1 class="brand-title">StudyFlow</h1>
-            <h2 class="hero-subtitle">Turn confusion into clarity, one topic at a time.</h2>
-            <p class="hero-tagline">One step closer, every day.</p>
-        </section>
-
-        <!-- COMPACT ASK AI BOX -->
-        <div class="ask-box compact-ask-box">
-            <input type="text" placeholder="What would you like to learn about?">
-            <button>Start</button>
-        </div>
-
-        <!-- MODE INDICATOR -->
-        <div id="mode-indicator-container" style="display: none;">
-            <span id="mode-badge"></span>
-            <button id="reset-mode-btn" onclick="resetMode()">✕ Reset</button>
-        </div>
-
-        <!-- FEATURES -->
-        <div class="features">
-            <div class="card" onclick="studyNotes()">
-                <div class="icon-wrapper"><span class="icon">📚</span></div>
-                <h3>Study Notes</h3>
-                <p>Turn difficult topics into simple notes.</p>
-                <div class="card-action">Start &rarr;</div>
+        <div class="sidebar-menu">
+            <div class="menu-section">
+                <div class="menu-title">LEARN</div>
+                <a href="#" class="menu-item active" data-page="home"><span class="icon">🏠</span> Home</a>
+                <a href="#" class="menu-item" data-page="ai-notes"><span class="icon">📝</span> AI Notes</a>
+                <a href="#" class="menu-item" data-page="pdf-summarizer"><span class="icon">📄</span> PDF Summarizer</a>
+                <a href="#" class="menu-item" data-page="coming-soon" data-title="Ask My Notes"><span class="icon">💬</span> Ask My Notes</a>
+                <a href="#" class="menu-item" data-page="study-path"><span class="icon">🛤️</span> Study Path</a>
             </div>
-
-            <div class="card" onclick="mcqQuiz()">
-                <div class="icon-wrapper"><span class="icon">🧠</span></div>
-                <h3>Practice MCQs</h3>
-                <p>Test what you actually remember.</p>
-                <div class="card-action">Start &rarr;</div>
+            
+            <div class="menu-section">
+                <div class="menu-title">PRACTICE</div>
+                <a href="#" class="menu-item" data-page="mcqs"><span class="icon">🧠</span> Practice MCQs</a>
+                <a href="#" class="menu-item" data-page="coming-soon" data-title="Flashcards"><span class="icon">📇</span> Flashcards</a>
+                <a href="#" class="menu-item" data-page="coming-soon" data-title="Answer Practice"><span class="icon">✍️</span> Answer Practice</a>
+                <a href="#" class="menu-item" data-page="coming-soon" data-title="Mock Test"><span class="icon">⏱️</span> Mock Test</a>
             </div>
-
-            <div class="card" onclick="studyPlanner()">
-                <div class="icon-wrapper"><span class="icon">📅</span></div>
-                <h3>Study Planner</h3>
-                <p>Turn your syllabus into a plan.</p>
-                <div class="card-action">Start &rarr;</div>
+            
+            <div class="menu-section">
+                <div class="menu-title">IMPROVE</div>
+                <a href="#" class="menu-item" data-page="smart-revision"><span class="icon">🔄</span> Smart Revision</a>
+                <a href="#" class="menu-item" data-page="weak-topics"><span class="icon">📉</span> Weak Topics</a>
+                <a href="#" class="menu-item" data-page="progress"><span class="icon">📊</span> Progress</a>
+                <a href="#" class="menu-item" data-page="streak"><span class="icon">🔥</span> Streak</a>
             </div>
-
-            <div class="card" onclick="quickHelp()">
-                <div class="icon-wrapper"><span class="icon">💡</span></div>
-                <h3>Quick Help</h3>
-                <p>Get a simple explanation when you're stuck.</p>
-                <div class="card-action">Start &rarr;</div>
+            
+            <div class="menu-section">
+                <div class="menu-title">TOOLS</div>
+                <a href="#" class="menu-item" data-page="quick-help"><span class="icon">💡</span> Quick Help</a>
+                <a href="#" class="menu-item" data-page="planner"><span class="icon">📅</span> Study Planner</a>
+                <a href="#" class="menu-item" data-page="coming-soon" data-title="All Tools"><span class="icon">🛠️</span> More Tools</a>
             </div>
         </div>
+    </aside>
 
-        <!-- YOUR STUDY FLOW DIAGRAM -->
-        <section class="study-flow-diagram">
-            <div class="flow-step">
-                <h4>Learn</h4>
-                <p>Generate notes and explanations</p>
+    <!-- MAIN CONTENT -->
+    <div class="main-content">
+        
+        <!-- HEADER -->
+        <header class="top-header">
+            <div class="header-left">
+                <button class="mobile-menu-btn" onclick="toggleSidebar()">☰</button>
+                <div class="search-bar">
+                    <span class="search-icon">🔍</span>
+                    <input type="text" placeholder="Search topics, notes...">
+                </div>
             </div>
-            <div class="flow-arrow">&rarr;</div>
-            <div class="flow-step">
-                <h4>Practice</h4>
-                <p>Take MCQs and flashcards</p>
+            <div class="header-actions">
+                <div class="icon-btn">🔔</div>
+                <div class="profile-area">
+                    <div class="profile-avatar">S</div>
+                    <span class="profile-name">Student</span>
+                    <span class="dropdown-icon">▼</span>
+                </div>
             </div>
-            <div class="flow-arrow">&rarr;</div>
-            <div class="flow-step">
-                <h4>Improve</h4>
-                <p>Revise and strengthen weak areas</p>
+        </header>
+
+        <!-- PAGE CONTENT CONTAINER -->
+        <main class="page-content" id="page-content">
+            
+            <!-- ============================== -->
+            <!-- PAGE: HOME DASHBOARD           -->
+            <!-- ============================== -->
+            <div id="page-home" class="page active">
+                <div class="hero-section">
+                    <h1>Good Morning! 👋</h1>
+                    <p>Small steps every day lead to big results. Keep going!</p>
+                </div>
+
+                <div class="section-title">Quick Actions</div>
+                <div class="grid-4">
+                    <div class="quick-card" onclick="navigate('ai-notes')">
+                        <div class="icon-wrapper">📝</div>
+                        <h3>Create Notes</h3>
+                        <p>Turn topics into clear, structured study notes.</p>
+                        <div class="card-btn">Go to AI Notes &rarr;</div>
+                    </div>
+                    <div class="quick-card" onclick="navigate('mcqs')">
+                        <div class="icon-wrapper">🧠</div>
+                        <h3>Practice MCQs</h3>
+                        <p>Test your knowledge with AI-generated questions.</p>
+                        <div class="card-btn">Start Practice &rarr;</div>
+                    </div>
+                    <div class="quick-card" onclick="navigate('planner')">
+                        <div class="icon-wrapper">📅</div>
+                        <h3>Study Planner</h3>
+                        <p>Plan your study sessions and stay on track.</p>
+                        <div class="card-btn">Create Plan &rarr;</div>
+                    </div>
+                    <div class="quick-card" onclick="navigate('quick-help')">
+                        <div class="icon-wrapper">💡</div>
+                        <h3>Quick Help</h3>
+                        <p>Get simple explanations when you're stuck.</p>
+                        <div class="card-btn">Ask Now &rarr;</div>
+                    </div>
+                </div>
+
+                <div class="grid-3 mt-4">
+                    <!-- Progress Card -->
+                    <div class="dashboard-card">
+                        <h3>Your Progress</h3>
+                        <div class="progress-stats">
+                            <div class="stat-box">
+                                <div class="stat-val" id="stat-completion">0%</div>
+                                <div class="stat-label">Completion</div>
+                            </div>
+                            <div class="stat-box">
+                                <div class="stat-val" id="stat-streak">0</div>
+                                <div class="stat-label">Day Streak</div>
+                            </div>
+                            <div class="stat-box">
+                                <div class="stat-val" id="stat-xp">0</div>
+                                <div class="stat-label">XP</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Schedule -->
+                    <div class="dashboard-card">
+                        <h3>Upcoming Schedule</h3>
+                        <div id="home-schedule-list" class="schedule-list">
+                            <!-- Injected by JS -->
+                        </div>
+                    </div>
+                    
+                    <!-- Recent Activity -->
+                    <div class="dashboard-card">
+                        <h3>Recent Activity</h3>
+                        <div id="home-activity-list" class="activity-list">
+                            <!-- Injected by JS -->
+                        </div>
+                    </div>
+                </div>
+
+                <div class="section-title mt-4">Continue Learning</div>
+                <div class="grid-4" id="home-continue-learning">
+                    <!-- Injected by JS -->
+                </div>
+
+                <div class="section-title mt-4">Ask Your Study Assistant</div>
+                <div class="dashboard-card assistant-card">
+                    <div class="ask-box">
+                        <input type="text" id="home-ask-input" placeholder="Ask anything... (e.g. Explain recursion)" />
+                        <button id="home-ask-btn">Ask Now</button>
+                    </div>
+                    <div class="assistant-suggestions">
+                        <span onclick="setHomeAsk('Explain this in simple terms')">Explain this in simple terms</span>
+                        <span onclick="setHomeAsk('Give me a real-life example')">Give me a real-life example</span>
+                        <span onclick="setHomeAsk('Summarize this')">Summarize this</span>
+                        <span onclick="setHomeAsk('What should I study next?')">What should I study next?</span>
+                    </div>
+                    <div id="home-answer" class="ai-answer-area"></div>
+                </div>
             </div>
-        </section>
 
-        <!-- AI ANSWER -->
-        <div id="answer"></div>
+            <!-- ============================== -->
+            <!-- PAGE: AI NOTES                 -->
+            <!-- ============================== -->
+            <div id="page-ai-notes" class="page">
+                <div class="page-header">
+                    <h2>AI Notes</h2>
+                    <p>Generate highly structured, easy-to-understand notes for any topic.</p>
+                </div>
+                
+                <div class="dashboard-card form-card">
+                    <div class="pdf-upload-placeholder" onclick="alert('PDF Upload coming soon. For now, type a topic below!')">
+                        <span class="icon">📄</span>
+                        <p>Drag & drop a PDF, or click to upload</p>
+                        <small>Coming soon</small>
+                    </div>
+                    
+                    <div class="ask-box mt-3">
+                        <input type="text" id="notes-input" placeholder="Enter a topic (e.g. Photosynthesis, SQL Joins)..." />
+                        <button id="notes-btn">Generate Notes</button>
+                    </div>
+                </div>
+                
+                <div id="notes-answer" class="ai-answer-area mt-4"></div>
+            </div>
 
-    </main>
+            <!-- ============================== -->
+            <!-- PAGE: PDF SUMMARIZER           -->
+            <!-- ============================== -->
+            <div id="page-pdf-summarizer" class="page">
+                <div class="page-header">
+                    <h2>PDF Summarizer</h2>
+                    <p>Upload a PDF document to generate an AI-powered summary and study guide.</p>
+                </div>
+                
+                <div class="dashboard-card form-card">
+                    <input type="file" id="pdf-file-input" accept="application/pdf" style="display: none;" />
+                    <div class="pdf-upload-placeholder" id="pdf-upload-area" onclick="document.getElementById('pdf-file-input').click()">
+                        <span class="icon">📄</span>
+                        <p id="pdf-file-name">Click to select a PDF file</p>
+                        <small>Max 5MB (Up to 20 pages)</small>
+                    </div>
+                    
+                    <div style="display: flex; gap: 12px; margin-top: 16px;">
+                        <button id="pdf-summarize-btn" class="primary-btn" style="flex: 1; padding: 12px; font-size: 13px;" disabled>Summarize PDF</button>
+                        <button id="pdf-clear-btn" class="primary-btn" style="background: var(--text-sec); display: none;">Clear</button>
+                    </div>
+                </div>
+                
+                <div id="pdf-answer" class="ai-answer-area mt-4"></div>
+            </div>
 
-    <script src="script.js"></script>
+            <!-- ============================== -->
+            <!-- PAGE: MCQs                     -->
+            <!-- ============================== -->
+            <div id="page-mcqs" class="page">
+                <div class="page-header">
+                    <h2>Practice MCQs</h2>
+                    <p>Test your knowledge with 5 targeted AI-generated questions.</p>
+                </div>
+                
+                <div class="dashboard-card form-card">
+                    <div class="ask-box">
+                        <input type="text" id="mcq-input" placeholder="Enter a topic to test yourself on..." />
+                        <button id="mcq-btn">Start Quiz</button>
+                    </div>
+                </div>
+                
+                <div id="mcq-answer" class="ai-answer-area mt-4"></div>
+            </div>
+
+            <!-- ============================== -->
+            <!-- PAGE: STUDY PLANNER            -->
+            <!-- ============================== -->
+            <div id="page-planner" class="page">
+                <div class="page-header">
+                    <h2>Study Planner</h2>
+                    <p>Create a structured day-by-day plan to tackle your syllabus.</p>
+                </div>
+                
+                <div class="dashboard-card form-card">
+                    <div class="ask-box">
+                        <input type="text" id="planner-input" placeholder="e.g. Biology Exam in 5 days" />
+                        <button id="planner-btn">Create Plan</button>
+                    </div>
+                </div>
+                
+                <div id="planner-answer" class="ai-answer-area mt-4"></div>
+            </div>
+
+            <!-- ============================== -->
+            <!-- PAGE: QUICK HELP               -->
+            <!-- ============================== -->
+            <div id="page-quick-help" class="page">
+                <div class="page-header">
+                    <h2>Quick Help</h2>
+                    <p>Get ELI5 (Explain Like I'm 5) explanations for complex topics.</p>
+                </div>
+                
+                <div class="dashboard-card form-card">
+                    <div class="ask-box">
+                        <input type="text" id="qh-input" placeholder="What are you confused about?" />
+                        <button id="qh-btn">Explain it simply</button>
+                    </div>
+                </div>
+                
+                <div id="qh-answer" class="ai-answer-area mt-4"></div>
+            </div>
+
+            <!-- ============================== -->
+            <!-- PAGE: STUDY PATH               -->
+            <!-- ============================== -->
+            <div id="page-study-path" class="page">
+                <div class="page-header">
+                    <h2>Your Study Path</h2>
+                    <p>Track your curriculum step-by-step.</p>
+                </div>
+                <div class="dashboard-card" style="max-width: 600px; margin: 0 auto;">
+                    <div class="path-list" id="study-path-list">
+                        <!-- Injected by JS -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- ============================== -->
+            <!-- PAGE: PROGRESS                 -->
+            <!-- ============================== -->
+            <div id="page-progress" class="page">
+                <div class="page-header">
+                    <h2>Progress Dashboard</h2>
+                    <p>Track your learning journey over time.</p>
+                </div>
+                <div class="grid-3">
+                    <div class="dashboard-card text-center">
+                        <h3 class="text-muted">Total MCQs Solved</h3>
+                        <div class="huge-stat" id="prog-mcq">0</div>
+                    </div>
+                    <div class="dashboard-card text-center">
+                        <h3 class="text-muted">Study Sessions</h3>
+                        <div class="huge-stat" id="prog-sessions">0</div>
+                    </div>
+                    <div class="dashboard-card text-center">
+                        <h3 class="text-muted">XP Earned</h3>
+                        <div class="huge-stat" id="prog-xp">0</div>
+                    </div>
+                </div>
+                <div class="dashboard-card mt-4">
+                    <h3>Overall Activity</h3>
+                    <div id="prog-activity" class="activity-list"></div>
+                </div>
+            </div>
+
+            <!-- ============================== -->
+            <!-- PAGE: WEAK TOPICS              -->
+            <!-- ============================== -->
+            <div id="page-weak-topics" class="page">
+                <div class="page-header">
+                    <h2>Weak Topics</h2>
+                    <p>Areas that need more revision based on your quiz results.</p>
+                </div>
+                <div class="dashboard-card">
+                    <table class="data-table" id="weak-topics-table">
+                        <thead>
+                            <tr>
+                                <th>Topic</th>
+                                <th>Attempts</th>
+                                <th>Accuracy</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Injected by JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- ============================== -->
+            <!-- PAGE: SMART REVISION           -->
+            <!-- ============================== -->
+            <div id="page-smart-revision" class="page">
+                <div class="page-header">
+                    <h2>Smart Revision</h2>
+                    <p>Recommended topics to review today based on your history.</p>
+                </div>
+                <div class="grid-3" id="revision-list">
+                    <!-- Injected by JS -->
+                </div>
+            </div>
+
+            <!-- ============================== -->
+            <!-- PAGE: STREAK                   -->
+            <!-- ============================== -->
+            <div id="page-streak" class="page">
+                <div class="page-header">
+                    <h2>Study Streak</h2>
+                    <p>Consistency beats cramming.</p>
+                </div>
+                <div class="grid-2">
+                    <div class="dashboard-card text-center">
+                        <h3 class="text-muted">Current Streak</h3>
+                        <div class="huge-stat fire-text" id="streak-current">0</div>
+                        <p>Days</p>
+                    </div>
+                    <div class="dashboard-card text-center">
+                        <h3 class="text-muted">Longest Streak</h3>
+                        <div class="huge-stat" id="streak-longest">0</div>
+                        <p>Days</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ============================== -->
+            <!-- PAGE: COMING SOON              -->
+            <!-- ============================== -->
+            <div id="page-coming-soon" class="page">
+                <div class="coming-soon-container text-center">
+                    <div style="font-size: 48px; margin-bottom: 16px;">🚀</div>
+                    <h2 id="coming-soon-title">Feature Name</h2>
+                    <p style="color: var(--text-sec); margin-bottom: 24px;">We are currently building this feature. Check back soon!</p>
+                    <button class="primary-btn" onclick="navigate('home')">Return Home</button>
+                </div>
+            </div>
+
+        </main>
+    </div>
+</div>
+
+<script src="script.js"></script>
 </body>
 </html>
