@@ -1,3 +1,5 @@
+const API_BASE = window.location.hostname === "127.0.0.1" || window.location.hostname === "localhost" ? "http://127.0.0.1:5000" : "";
+
 // =========================================
 // DATA & STATE MANAGEMENT (LocalStorage)
 // =========================================
@@ -263,7 +265,7 @@ async function fetchAIResponse(question, mode, buttonEl, answerEl) {
     answerEl.innerHTML = '<div class="loading-indicator">StudyFlow is thinking...</div>';
 
     try {
-        const response = await fetch("http://127.0.0.1:5000/ask", {
+        const response = await fetch(`${API_BASE}/ask`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ question, mode })
@@ -426,7 +428,7 @@ if(pdfInput && pdfBtn) {
         pdfAnswer.innerHTML = '<div class="loading-indicator">StudyFlow is reading your PDF...</div>';
 
         try {
-            const response = await fetch("http://127.0.0.1:5000/summarize-pdf", {
+            const response = await fetch(`${API_BASE}/summarize-pdf`, {
                 method: "POST",
                 body: formData
             });
@@ -624,7 +626,7 @@ if (chBtn) {
         answerEl.innerHTML = '<div class="loading-indicator">StudyFlow is thinking...</div>';
         
         try {
-            const res = await fetch("http://127.0.0.1:5000/ask", {
+            const res = await fetch(`${API_BASE}/ask`, {
                 method: "POST", headers: {"Content-Type":"application/json"},
                 body: JSON.stringify({ question: input, mode: "code-helper", language: lang, action: action })
             });
@@ -669,7 +671,7 @@ if (amnBtn) {
         answerEl.innerHTML = '<div class="loading-indicator">Reading your notes...</div>';
         
         try {
-            const res = await fetch("http://127.0.0.1:5000/ask", {
+            const res = await fetch(`${API_BASE}/ask`, {
                 method: "POST", headers: {"Content-Type":"application/json"},
                 body: JSON.stringify({ question: input, mode: "ask-my-notes", notes: latestNotes })
             });
@@ -703,7 +705,7 @@ if (fcBtn) {
         fcBtn.disabled = true;
         
         try {
-            const res = await fetch("http://127.0.0.1:5000/ask", {
+            const res = await fetch(`${API_BASE}/ask`, {
                 method: "POST", headers: {"Content-Type":"application/json"},
                 body: JSON.stringify({ question: input, mode: "flashcards" })
             });
@@ -779,7 +781,7 @@ if (apBtn) {
         apBtn.textContent = 'Generating...';
         
         try {
-            const res = await fetch("http://127.0.0.1:5000/ask", {
+            const res = await fetch(`${API_BASE}/ask`, {
                 method: "POST", headers: {"Content-Type":"application/json"},
                 body: JSON.stringify({ question: topic, context: diff, mode: "answer-practice-q" })
             });
@@ -806,7 +808,7 @@ if (apBtn) {
         subBtn.textContent = 'Evaluating...';
         
         try {
-            const res = await fetch("http://127.0.0.1:5000/ask", {
+            const res = await fetch(`${API_BASE}/ask`, {
                 method: "POST", headers: {"Content-Type":"application/json"},
                 body: JSON.stringify({ question: answer, context: apCurrentQuestion, mode: "answer-practice-eval" })
             });
@@ -854,7 +856,7 @@ if (mtBtn) {
         mtBtn.disabled = true;
         
         try {
-            const res = await fetch("http://127.0.0.1:5000/ask", {
+            const res = await fetch(`${API_BASE}/ask`, {
                 method: "POST", headers: {"Content-Type":"application/json"},
                 body: JSON.stringify({ question: topic, mode: "mock-test-gen" })
             });
@@ -928,7 +930,7 @@ async function evaluateMockTest() {
     }));
     
     try {
-        const res = await fetch("http://127.0.0.1:5000/ask", {
+        const res = await fetch(`${API_BASE}/ask`, {
             method: "POST", headers: {"Content-Type":"application/json"},
             body: JSON.stringify({ question: JSON.stringify(shortAnswers), mode: "mock-test-eval" })
         });
@@ -1015,7 +1017,7 @@ if(iqInput && iqBtn) {
         iqAnswer.innerHTML = '<div class="loading-indicator">StudyFlow is analyzing your image...</div>';
 
         try {
-            const response = await fetch("http://127.0.0.1:5000/image-q", {
+            const response = await fetch(`${API_BASE}/image-q`, {
                 method: "POST",
                 body: formData
             });
@@ -1108,7 +1110,7 @@ if (vtMicBtn) {
         vtAnswer.innerHTML = '<div class="loading-indicator">StudyFlow is thinking...</div>';
         
         try {
-            const res = await fetch("http://127.0.0.1:5000/ask", {
+            const res = await fetch(`${API_BASE}/ask`, {
                 method: "POST", headers: {"Content-Type":"application/json"},
                 body: JSON.stringify({ question: question, mode: "normal" })
             });

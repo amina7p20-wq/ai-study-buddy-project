@@ -9,6 +9,22 @@ load_dotenv()
 app = Flask(__name__)
 CORS(app)
 
+from flask import send_file
+import os
+
+@app.route("/")
+def index():
+    return send_file("index.html")
+
+@app.route("/style.css")
+def style():
+    return send_file("style.css", mimetype="text/css")
+
+@app.route("/script.js")
+def script():
+    return send_file("script.js", mimetype="application/javascript")
+
+
 api_key = os.getenv("GEMINI_API_KEY")
 
 if not api_key:
@@ -254,8 +270,8 @@ def summarize_pdf():
         return jsonify({"error": "Invalid file format. Please upload a PDF."}), 400
 
     file_bytes = file.read()
-    if len(file_bytes) > 5 * 1024 * 1024:
-        return jsonify({"error": "File is too large. Max size is 5MB."}), 400
+    if len(file_bytes) > 4 * 1024 * 1024:
+        return jsonify({"error": "File is too large. Max size is 4MB."}), 400
 
     if len(file_bytes) == 0:
         return jsonify({"error": "The uploaded PDF is empty."}), 400
@@ -315,8 +331,8 @@ def image_q():
         return jsonify({"error": "No selected file."}), 400
         
     file_bytes = file.read()
-    if len(file_bytes) > 5 * 1024 * 1024:
-        return jsonify({"error": "File is too large. Max size is 5MB."}), 400
+    if len(file_bytes) > 4 * 1024 * 1024:
+        return jsonify({"error": "File is too large. Max size is 4MB."}), 400
 
     prompt = "Explain this image in detail for a student."
     if action == "quiz":
