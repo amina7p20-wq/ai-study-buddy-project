@@ -594,21 +594,15 @@ const pdfClearBtn = document.getElementById('pdf-clear-btn');
 const pdfAnswer = document.getElementById('pdf-answer');
 
 if(pdfInput && pdfBtn) {
+    const handlePdf = (file) => {
+        pdfNameDisplay.textContent = file.name;
+        pdfNameDisplay.style.color = 'var(--primary)';
+        pdfBtn.disabled = false;
+        if(pdfClearBtn) pdfClearBtn.style.display = 'block';
+    };
+
     pdfInput.addEventListener('change', (e) => {
-        if(e.target.files.length > 0) {
-            const file = e.target.files[0];
-            pdfNameDisplay.textContent = file.name;
-            pdfNameDisplay.style.color = 'var(--primary)';
-            pdfNameDisplay.style.fontWeight = '600';
-            pdfBtn.disabled = false;
-            if(pdfClearBtn) pdfClearBtn.style.display = 'block';
-        } else {
-            pdfNameDisplay.textContent = 'Click to select a PDF file';
-            pdfNameDisplay.style.color = 'var(--text-sec)';
-            pdfNameDisplay.style.fontWeight = 'normal';
-            pdfBtn.disabled = true;
-            if(pdfClearBtn) pdfClearBtn.style.display = 'none';
-        }
+        if(e.target.files.length > 0) handlePdf(e.target.files[0]);
     });
 
     if(pdfClearBtn) {
@@ -616,7 +610,6 @@ if(pdfInput && pdfBtn) {
             pdfInput.value = '';
             pdfNameDisplay.textContent = 'Click to select a PDF file';
             pdfNameDisplay.style.color = 'var(--text-sec)';
-            pdfNameDisplay.style.fontWeight = 'normal';
             pdfBtn.disabled = true;
             pdfClearBtn.style.display = 'none';
             if(pdfAnswer) {
@@ -638,17 +631,19 @@ if(pdfInput && pdfBtn) {
         pdfAnswer.innerHTML = `<div class="loading-indicator">Summarizing PDF...</div>`;
         
         try {
-            const res = await fetch(`${API_BASE}/summarize-pdf`, {
-                method: 'POST',
-                body: formData
-            });
+            const res = await fetch(`${API_BASE}/summarize-pdf`, { method: 'POST', body: formData });
             const data = await res.json();
-            pdfAnswer.innerHTML = `<div class="dashboard-card" style="margin-top:20px;">` + marked.parse(data.summary) + `</div>`;
-            if(typeof saveToolData === 'function') saveToolData("pdf_summaries", { fileName: file.name, summary: data.summary });
-            if(typeof addXP === 'function') addXP(30);
-            if(typeof logActivity === 'function') logActivity("Summarized a PDF");
+            if(data.summary) {
+                pdfAnswer.innerHTML = `<div class="dashboard-card" style="margin-top:20px;">` + marked.parse(data.summary) + `</div>`;
+                appendToolControls(pdfAnswer, file.name, "pdf");
+                if(typeof saveToolData === 'function') saveToolData("pdf_summaries", { fileName: file.name, summary: data.summary });
+                if(typeof addXP === 'function') addXP(30);
+                if(typeof logActivity === 'function') logActivity("Summarized a PDF");
+            } else {
+                pdfAnswer.innerHTML = `<div class="error-msg"><strong>Error:</strong> ${data.error}</div>`;
+            }
         } catch(e) {
-            pdfAnswer.innerHTML = "<div style='color:var(--error); padding: 16px; border: 1px solid var(--error); border-radius: 8px; background: rgba(220, 53, 69, 0.05);'><strong>Error:</strong> Failed to summarize PDF.</div>";
+            pdfAnswer.innerHTML = "<div class='error-msg'><strong>Connection Error:</strong> Failed to summarize PDF.</div>";
         } finally {
             pdfBtn.disabled = false;
             pdfBtn.innerHTML = 'Summarize PDF';
@@ -660,25 +655,43 @@ const iqNameDisplay = document.getElementById('iq-file-name');
 const iqBtn = document.getElementById('iq-btn');
 const iqClearBtn = document.getElementById('iq-clear-btn');
 const iqAnswer = document.getElementById('iq-answer');
-const iqAction = document.getElementById('iq-action');
+const iqPreview = document.getElementById('iq-preview');
 
-if(iqInput && iqBtn) {
+if (iqInput && iqBtn) {
+    const handleFile = (file) => {
+        iqNameDisplay.textContent = file.name;
+        iqBtn.disabled = false;
+        iqClearBtn.style.display = 'block';
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            iqPreview.src = e.target.result;
+            iqPreview.style.display = 'block';
+        };
+        reader.readAsDataURL(file);
+    };
+
     iqInput.addEventListener('change', (e) => {
-        if(e.target.files.length > 0) {
-            const file = e.target.files[0];
-            iqNameDisplay.textContent = file.name;
-            iqNameDisplay.style.color = 'var(--primary)';
-            iqNameDisplay.style.fontWeight = '600';
-            iqBtn.disabled = false;
-            iqClearBtn.style.display = 'block';
+        if(e.target.files.length > 0) handleFile(e.target.files[0]);
+    });
+    
+    // Drag and drop
+    const dropZone = iqInput.closest('.file-upload-box');
+    dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.style.borderColor = 'var(--primary)'; });
+    dropZone.addEventListener('dragleave', (e) => { e.preventDefault(); dropZone.style.borderColor = 'var(--border-color)'; });
+    dropZone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        dropZone.style.borderColor = 'var(--border-color)';
+        if(e.dataTransfer.files.length > 0) {
+            iqInput.files = e.dataTransfer.files;
+            handleFile(e.dataTransfer.files[0]);
         }
     });
 
     iqClearBtn.addEventListener('click', () => {
         iqInput.value = '';
         iqNameDisplay.textContent = 'Click to upload an image (JPG/PNG)';
-        iqNameDisplay.style.color = '';
-        iqNameDisplay.style.fontWeight = 'normal';
+        iqPreview.src = '';
+        iqPreview.style.display = 'none';
         iqBtn.disabled = true;
         iqClearBtn.style.display = 'none';
         iqAnswer.innerHTML = '';
@@ -687,44 +700,36 @@ if(iqInput && iqBtn) {
 
     iqBtn.addEventListener('click', async () => {
         if(iqInput.files.length === 0) return;
-        
         const file = iqInput.files[0];
-        const action = iqAction.value;
+        const action = document.getElementById('iq-action').value;
         const formData = new FormData();
         formData.append('file', file);
         formData.append('action', action);
-
-        const originalText = iqBtn.textContent;
+        
         iqBtn.disabled = true;
-        iqBtn.textContent = "Analyzing image...";
-        iqAnswer.style.display = "block";
-        iqAnswer.innerHTML = '<div class="loading-indicator">StudyFlow is analyzing your image...</div>';
-
+        iqBtn.innerHTML = 'Analyzing...';
+        iqAnswer.style.display = 'block';
+        iqAnswer.innerHTML = `<div class="loading-indicator">Analyzing Image...</div>`;
+        
         try {
-            const response = await fetch(`${API_BASE}/image-q`, {
-                method: "POST",
-                body: formData
-            });
-
-            if (!response.ok) {
-                const err = await response.json();
-                iqAnswer.innerHTML = `<p style='padding:16px; color: var(--error);'>${err.error || "Something went wrong."}</p>`;
+            const res = await fetch(`${API_BASE}/image-q`, { method: 'POST', body: formData });
+            const data = await res.json();
+            if(data.answer) {
+                iqAnswer.innerHTML = `<div class="dashboard-card" style="margin-top:20px;">` + marked.parse(data.answer) + `</div>`;
+                appendToolControls(iqAnswer, file.name, "image-q");
+                if(typeof addXP === 'function') addXP(20);
+                if(typeof logActivity === 'function') logActivity("Analyzed image");
             } else {
-                const data = await response.json();
-                displayNormalAnswer(data.answer, iqAnswer);
-                addXP(20);
-                logActivity(`Analyzed image: ${file.name}`);
+                iqAnswer.innerHTML = `<div class="error-msg"><strong>Error:</strong> ${data.error}</div>`;
             }
-        } catch (error) {
-            iqAnswer.innerHTML = "<p style='padding:16px;'>Network Error. Please make sure the backend is running.</p>";
-            console.error(error);
+        } catch(e) {
+            iqAnswer.innerHTML = "<div class='error-msg'><strong>Connection Error:</strong> Failed to process image.</div>";
         } finally {
             iqBtn.disabled = false;
-            iqBtn.textContent = originalText;
+            iqBtn.innerHTML = 'Analyze Image';
         }
     });
 }
-
 // =========================================
 // VOICE TUTOR
 // =========================================
@@ -860,30 +865,70 @@ document.addEventListener('click', (e) => {
     }
 });
 
-// Global Clear Button Logic
-document.addEventListener('click', (e) => {
-    if (e.target.classList.contains('tool-clear-btn')) {
-        const targetBtnId = e.target.getAttribute('data-target');
-        const askBox = e.target.closest('.ask-box');
-        if (askBox) {
-            const input = askBox.querySelector('input');
-            if (input) {
-                input.value = '';
-                input.focus();
-            }
+
+function appendToolControls(answerEl, promptStr, mode) {
+    const controls = document.createElement('div');
+    controls.className = 'tool-controls';
+    controls.style.cssText = 'display: flex; gap: 8px; margin-top: 12px; justify-content: flex-end; flex-wrap: wrap;';
+    
+    // Escape prompt string safely for HTML injection
+    const safePrompt = String(promptStr).replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+    
+    controls.innerHTML = `
+        <button class="secondary-btn btn-sm copy-btn" onclick="copyResult(this)" style="padding: 6px 12px; font-size:12px; background:transparent; border:1px solid var(--primary); color:var(--primary); cursor:pointer; border-radius:4px;">Copy Response</button>
+        <button class="secondary-btn btn-sm" onclick="regenerateResponse(this, '${safePrompt}', '${mode}')" style="padding: 6px 12px; font-size:12px; background:transparent; border:1px solid var(--primary); color:var(--primary); cursor:pointer; border-radius:4px;">Regenerate</button>
+        <button class="secondary-btn btn-sm" onclick="clearCurrent(this)" style="padding: 6px 12px; font-size:12px; background:transparent; border:1px solid var(--text-sec); color:var(--text-sec); cursor:pointer; border-radius:4px;">Clear</button>
+        <button class="primary-btn btn-sm" onclick="newChat(this)" style="padding: 6px 12px; font-size:12px; border:none; cursor:pointer; border-radius:4px;">New Chat</button>
+    `;
+    answerEl.appendChild(controls);
+}
+
+window.regenerateResponse = function(btn, promptStr, mode) {
+    const page = btn.closest('.page');
+    if (page) {
+        const input = page.querySelector('input[type="text"]');
+        if (input && promptStr && promptStr !== 'undefined') input.value = promptStr;
+        
+        // Find the main generate button for this tool
+        const generateBtn = page.querySelector('.ask-box button, .form-card .primary-btn:not([style*="display: none"])');
+        if (generateBtn) generateBtn.click();
+    }
+}
+
+
+window.copyResult = function(btn) {
+    const card = btn.closest('.ai-answer-area').querySelector('.dashboard-card');
+    if (card) {
+        navigator.clipboard.writeText(card.innerText);
+        const original = btn.innerText;
+        btn.innerText = 'Copied!';
+        setTimeout(() => btn.innerText = original, 2000);
+    }
+}
+
+window.clearCurrent = function(btn) {
+    const answerArea = btn.closest('.ai-answer-area');
+    if (answerArea) {
+        answerArea.innerHTML = '';
+        answerArea.style.display = 'none';
+    }
+}
+
+window.newChat = function(btn) {
+    window.clearCurrent(btn);
+    // Find the nearest ask-box and clear input
+    const page = btn.closest('.page');
+    if (page) {
+        const input = page.querySelector('input[type="text"]');
+        if (input) {
+            input.value = '';
+            input.focus();
         }
-        // Find the adjacent answer area
-        let card = e.target.closest('.dashboard-card');
-        if (card) {
-            let nextEl = card.nextElementSibling;
-            while(nextEl) {
-                if (nextEl.classList.contains('ai-answer-area')) {
-                    nextEl.innerHTML = '';
-                    nextEl.style.display = 'none';
-                    break;
-                }
-                nextEl = nextEl.nextElementSibling;
-            }
+        const fileInput = page.querySelector('input[type="file"]');
+        if (fileInput) {
+            // Trigger clear button for PDF/Image if exists
+            const clearBtn = page.querySelector('#iq-clear-btn, #pdf-clear-btn');
+            if (clearBtn) clearBtn.click();
         }
     }
-});
+}
