@@ -58,11 +58,14 @@ auth.onAuthStateChanged(async (user) => {
         document.getElementById('auth-wrapper').style.display = 'none';
         document.getElementById('app-sidebar').style.display = 'flex';
         document.getElementById('app-main').style.display = 'flex';
-        document.getElementById('user-greeting').textContent = `Hello, ${user.displayName || 'student'}!`;
+        const greetingEl = document.getElementById('user-greeting');
+        if (greetingEl) {
+            greetingEl.textContent = `Hello, ${user.displayName || 'student'}!`;
+        }
         
         await loadUserData();
         // Since the user is authenticated, we render the dashboard normally
-        if (typeof renderDashboard === 'function') renderDashboard();
+        if (typeof navigate === 'function') navigate('home');
     } else {
         currentUser = null;
         document.getElementById('auth-wrapper').style.display = 'flex';
