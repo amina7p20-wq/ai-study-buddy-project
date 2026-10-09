@@ -60,10 +60,37 @@ auth.onAuthStateChanged(async (user) => {
         if (sidebarEl) sidebarEl.style.display = 'flex';
         const mainEl = document.getElementById('app-main');
         if (mainEl) mainEl.style.display = 'flex';
+        
+        let dName = user.displayName;
+        if (!dName) {
+            const d = await db.collection('users').doc(user.uid).get();
+            if (d.exists && d.data().name) {
+                dName = d.data().name;
+            } else if (user.email) {
+                dName = user.email.split('@')[0];
+            } else {
+                dName = 'Student';
+            }
+        }
+        
+        const nameSpans = document.querySelectorAll('.profile-name');
+        nameSpans.forEach(span => span.textContent = dName);
+        
+        const avatarDivs = document.querySelectorAll('.profile-avatar');
+        avatarDivs.forEach(avatarDiv => {
+            if (user.photoURL) {
+                avatarDiv.innerHTML = `<img src="${user.photoURL}" style="width:100%; height:100%; border-radius:50%; object-fit:cover;">`;
+            } else {
+                avatarDiv.textContent = dName.charAt(0).toUpperCase();
+            }
+        });
+        
+        // Also update greeting
         const greetingEl = document.getElementById('user-greeting');
         if (greetingEl) {
-            greetingEl.textContent = `Hello, ${user.displayName || 'student'}!`;
+            greetingEl.textContent = `Hello, ${dName}!`;
         }
+
         
         await loadUserData();
         // Since the user is authenticated, we render the dashboard normally
@@ -164,9 +191,38 @@ async function loadUserData() {
             userData.weakTopics = data.weakTopics || userData.weakTopics;
         }
         
+        
         const activitySnapshot = await db.collection('users').doc(currentUser.uid).collection('activity')
-            .orderBy('timestamp', 'desc').limit(5).get();
+            .orderBy('timestamp', 'desc').limit(10).get();
         userData.recentActivity = activitySnapshot.docs.map(d => ({ text: d.data().text, date: d.data().date }));
+        
+        let unreadCount = 0;
+        const listEl = document.getElementById('notif-list');
+        if (listEl) {
+            listEl.innerHTML = '';
+            if (activitySnapshot.empty) {
+                listEl.innerHTML = '<p style="color:var(--text-sec); padding:8px;">No notifications yet.</p>';
+            } else {
+                activitySnapshot.forEach(doc => {
+                    const data = doc.data();
+                    if (data.read === false) unreadCount++;
+                    listEl.innerHTML += `<div class="notif-item">
+                        <span>${data.text}</span>
+                        <span class="notif-time">${data.date}</span>
+                    </div>`;
+                });
+            }
+        }
+        
+        const badge = document.getElementById('notif-badge');
+        if (badge) {
+            if (unreadCount > 0) {
+                badge.textContent = unreadCount;
+                badge.style.display = 'block';
+            } else {
+                badge.style.display = 'none';
+            }
+        }
     } catch (e) {
         console.error("Error loading user data:", e);
     }
@@ -188,10 +244,10 @@ async function addXP(amount) {
 
 async function logActivity(text) {
     if (!currentUser) return;
-    const act = { text, date: new Date().toLocaleDateString(), timestamp: firebase.firestore.FieldValue.serverTimestamp() };
+    const act = { text, date: new Date().toLocaleDateString(), timestamp: firebase.firestore.FieldValue.serverTimestamp(), read: false };
     userData.recentActivity.unshift({ text, date: act.date });
     if(userData.recentActivity.length > 5) userData.recentActivity.pop();
-    if(typeof renderRecentActivity === 'function') renderRecentActivity();
+    if(typeof renderRecentActivity === 'function') renderRecentActivity(); loadUserData();
     try {
         await db.collection('users').doc(currentUser.uid).collection('activity').add(act);
     } catch (e) { console.error("Activity log failed", e); }
@@ -1293,3 +1349,40 @@ if (vtMicBtn) {
         if (e.key === 'Enter') vtSendBtn.click();
     });
 }
+
+
+// =========================================
+// NOTIFICATIONS EVENT LISTENERS
+// =========================================
+const notifBtn = document.getElementById('notif-btn');
+if (notifBtn) {
+    notifBtn.addEventListener('click', async () => {
+        const dropdown = document.getElementById('notif-dropdown');
+        if (!dropdown) return;
+        dropdown.style.display = dropdown.style.display === 'none' ? 'block' : 'none';
+        
+        if (dropdown.style.display === 'block' && currentUser) {
+            try {
+                const unreadDocs = await db.collection('users').doc(currentUser.uid).collection('activity').where('read', '==', false).get();
+                if (!unreadDocs.empty) {
+                    const batch = db.batch();
+                    unreadDocs.forEach(doc => {
+                        batch.update(doc.ref, {read: true});
+                    });
+                    await batch.commit();
+                    const badge = document.getElementById('notif-badge');
+                    if (badge) badge.style.display = 'none';
+                }
+            } catch (e) {
+                console.error("Error marking notifs as read:", e);
+            }
+        }
+    });
+}
+
+document.addEventListener('click', (e) => {
+    if (!e.target.closest('.notification-wrapper')) {
+        const dropdown = document.getElementById('notif-dropdown');
+        if (dropdown) dropdown.style.display = 'none';
+    }
+});
