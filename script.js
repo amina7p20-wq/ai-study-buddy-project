@@ -601,587 +601,60 @@ if(pdfInput && pdfBtn) {
             pdfNameDisplay.style.color = 'var(--primary)';
             pdfNameDisplay.style.fontWeight = '600';
             pdfBtn.disabled = false;
-            pdfClearBtn.style.display = 'block';
+            if(pdfClearBtn) pdfClearBtn.style.display = 'block';
         } else {
-            resetPdfUI();
+            pdfNameDisplay.textContent = 'Click to select a PDF file';
+            pdfNameDisplay.style.color = 'var(--text-sec)';
+            pdfNameDisplay.style.fontWeight = 'normal';
+            pdfBtn.disabled = true;
+            if(pdfClearBtn) pdfClearBtn.style.display = 'none';
         }
     });
 
-    pdfClearBtn.addEventListener('click', () => {
-        resetPdfUI();
-        pdfAnswer.innerHTML = '';
-        pdfAnswer.style.display = 'none';
-    });
-
-    function resetPdfUI() {
-        pdfInput.value = '';
-        pdfNameDisplay.textContent = 'Click to select a PDF file';
-        pdfNameDisplay.style.color = 'var(--text-main)';
-        pdfNameDisplay.style.fontWeight = '500';
-        pdfBtn.disabled = true;
-        pdfClearBtn.style.display = 'none';
+    if(pdfClearBtn) {
+        pdfClearBtn.addEventListener('click', () => {
+            pdfInput.value = '';
+            pdfNameDisplay.textContent = 'Click to select a PDF file';
+            pdfNameDisplay.style.color = 'var(--text-sec)';
+            pdfNameDisplay.style.fontWeight = 'normal';
+            pdfBtn.disabled = true;
+            pdfClearBtn.style.display = 'none';
+            if(pdfAnswer) {
+                pdfAnswer.innerHTML = '';
+                pdfAnswer.style.display = 'none';
+            }
+        });
     }
 
     pdfBtn.addEventListener('click', async () => {
         if(pdfInput.files.length === 0) return;
-        
         const file = pdfInput.files[0];
         const formData = new FormData();
         formData.append('file', file);
         
-        const originalText = pdfBtn.textContent;
         pdfBtn.disabled = true;
-        pdfBtn.textContent = "Uploading & Reading...";
-        pdfAnswer.style.display = "block";
-        pdfAnswer.innerHTML = '<div class="loading-indicator">StudyFlow is reading your PDF...</div>';
-
+        pdfBtn.innerHTML = 'Summarizing...';
+        pdfAnswer.style.display = 'block';
+        pdfAnswer.innerHTML = `<div class="loading-indicator">Summarizing PDF...</div>`;
+        
         try {
-            const response = await fetch(`${API_BASE}/summarize-pdf`, {
-                method: "POST",
+            const res = await fetch(`${API_BASE}/summarize-pdf`, {
+                method: 'POST',
                 body: formData
             });
-
-            if (!response.ok) {
-                const errData = await response.json();
-                pdfAnswer.innerHTML = `<p style='padding:16px; color:var(--error); font-weight:600;'>Error: ${errData.error || 'Something went wrong.'}</p>`;
-            } else {
-                const data = await response.json();
-                displayNormalAnswer(data.answer, pdfAnswer);
-                logActivity(`Summarized PDF: ${file.name}`);
-                userData.sessions++;
-                addXP(20); // Bonus XP for reading a PDF
-            }
-        } catch (error) {
-            pdfAnswer.innerHTML = "<p style='padding:16px;'>Network error. Please make sure the server is running.</p>";
-            console.error(error);
+            const data = await res.json();
+            pdfAnswer.innerHTML = `<div class="dashboard-card" style="margin-top:20px;">` + marked.parse(data.summary) + `</div>`;
+            if(typeof saveToolData === 'function') saveToolData("pdf_summaries", { fileName: file.name, summary: data.summary });
+            if(typeof addXP === 'function') addXP(30);
+            if(typeof logActivity === 'function') logActivity("Summarized a PDF");
+        } catch(e) {
+            pdfAnswer.innerHTML = "<div style='color:var(--error); padding: 16px; border: 1px solid var(--error); border-radius: 8px; background: rgba(220, 53, 69, 0.05);'><strong>Error:</strong> Failed to summarize PDF.</div>";
         } finally {
             pdfBtn.disabled = false;
-            pdfBtn.textContent = originalText;
+            pdfBtn.innerHTML = 'Summarize PDF';
         }
     });
 }
-
-// =========================================
-// INTERACTIVE MCQ SYSTEM
-// =========================================
-
-let currentQuiz = {
-    questions: [],
-    index: 0,
-    score: 0,
-    topic: "",
-    container: null
-};
-
-function startMCQQuiz(questions, topic, container) {
-    currentQuiz.questions = questions;
-    currentQuiz.index = 0;
-    currentQuiz.score = 0;
-    currentQuiz.topic = topic;
-    currentQuiz.container = container;
-    renderMCQQuestion();
-}
-
-function renderMCQQuestion() {
-    const { questions, index, container } = currentQuiz;
-    container.innerHTML = "";
-    
-    if (index >= questions.length) {
-        renderMCQResults();
-        return;
-    }
-    
-    const qData = questions[index];
-    
-    const card = document.createElement("div");
-    card.className = "quiz-card";
-    
-    const progress = document.createElement("div");
-    progress.className = "quiz-progress";
-    progress.textContent = `Question ${index + 1} of ${questions.length}`;
-    
-    const question = document.createElement("h3");
-    question.textContent = qData.question;
-    
-    card.appendChild(progress);
-    card.appendChild(question);
-    
-    const optionsContainer = document.createElement("div");
-    optionsContainer.className = "quiz-options-container";
-    
-    let answered = false;
-    
-    qData.options.forEach(opt => {
-        const btn = document.createElement("button");
-        btn.className = "quiz-option";
-        btn.textContent = `${opt.letter}) ${opt.text}`;
-        
-        btn.addEventListener("click", () => {
-            if (answered) return;
-            answered = true;
-            
-            const isCorrect = (opt.letter === qData.correctAnswer);
-            if (isCorrect) {
-                btn.classList.add("correct");
-                currentQuiz.score++;
-                userData.mcqsSolved++;
-                addXP(5);
-            } else {
-                btn.classList.add("wrong");
-                Array.from(optionsContainer.children).forEach(childBtn => {
-                    if (childBtn.textContent.startsWith(qData.correctAnswer + ")")) {
-                        childBtn.classList.add("correct");
-                    }
-                });
-            }
-            saveData(userData);
-            
-            const exp = document.createElement("div");
-            exp.className = "quiz-explanation";
-            exp.innerHTML = `<strong>${isCorrect ? '? Correct!' : '? Incorrect.'}</strong> ${qData.explanation}`;
-            card.appendChild(exp);
-            
-            const nextBtn = document.createElement("button");
-            nextBtn.className = "quiz-next-btn";
-            nextBtn.textContent = (index === questions.length - 1) ? "View Results ?" : "Next Question ?";
-            nextBtn.addEventListener("click", () => {
-                currentQuiz.index++;
-                renderMCQQuestion();
-            });
-            card.appendChild(nextBtn);
-        });
-        
-        optionsContainer.appendChild(btn);
-    });
-    
-    card.appendChild(optionsContainer);
-    container.appendChild(card);
-}
-
-function renderMCQResults() {
-    const { questions, score, topic, container } = currentQuiz;
-    const incorrect = questions.length - score;
-    
-    // Track weak topic if bad score
-    if(score < 3) {
-        const exists = userData.weakTopics.find(w => w.topic.toLowerCase() === topic.toLowerCase());
-        if(exists) {
-            exists.attempts++;
-            exists.accuracy = Math.round((exists.attempts > 1 ? (parseInt(exists.accuracy) + (score/5*100))/2 : (score/5*100))) + "%";
-        } else {
-            userData.weakTopics.push({ topic: topic, attempts: 1, accuracy: (score/5*100) + "%" });
-        }
-        saveData(userData);
-    }
-    
-    container.innerHTML = `
-        <div class="quiz-card" style="text-align: center; padding: 32px 20px;">
-            <h3 style="font-size: 14px; margin-bottom: 8px; color: var(--text-sec); text-transform: uppercase; letter-spacing: 1px;">Your Score</h3>
-            <div style="font-size: 36px; font-weight: 800; color: var(--primary); margin-bottom: 24px;">${score} / ${questions.length}</div>
-            
-            <div style="display: flex; justify-content: center; gap: 24px; margin-bottom: 32px; font-size: 13px;">
-                <div><strong style="color: var(--success);">${score}</strong> Correct</div>
-                <div><strong style="color: var(--error);">${incorrect}</strong> Incorrect</div>
-            </div>
-            
-            <div style="display: flex; justify-content: center; gap: 12px;">
-                <button class="quiz-next-btn" onclick="retryQuiz()">Try Again</button>
-            </div>
-        </div>
-    `;
-}
-
-window.retryQuiz = function() {
-    document.getElementById('mcq-input').value = currentQuiz.topic;
-    document.getElementById('mcq-btn').click();
-};
-
-// =========================================
-// INIT
-// =========================================
-document.addEventListener('DOMContentLoaded', () => {
-    renderDashboard();
-});
-
-// =========================================
-// MATHS SOLVER
-// =========================================
-const msBtn = document.getElementById('ms-btn');
-if (msBtn) {
-    msBtn.addEventListener('click', () => {
-        const input = document.getElementById('ms-input').value.trim();
-        fetchAIResponse(input, 'maths-solver', msBtn, document.getElementById('ms-answer'));
-    });
-}
-
-// =========================================
-// CODE HELPER
-// =========================================
-const chBtn = document.getElementById('ch-btn');
-if (chBtn) {
-    chBtn.addEventListener('click', async () => {
-        const lang = document.getElementById('ch-lang').value.trim();
-        const action = document.getElementById('ch-action').value;
-        const input = document.getElementById('ch-input').value.trim();
-        const answerEl = document.getElementById('ch-answer');
-        
-        if (!input) return;
-        
-        const origText = chBtn.textContent;
-        chBtn.textContent = 'Thinking...';
-        chBtn.disabled = true;
-        answerEl.style.display = 'block';
-        answerEl.innerHTML = '<div class="loading-indicator">StudyFlow is thinking...</div>';
-        
-        try {
-            const res = await fetch(`${API_BASE}/ask`, {
-                method: "POST", headers: {"Content-Type":"application/json"},
-                body: JSON.stringify({ question: input, mode: "code-helper", language: lang, action: action })
-            });
-            const data = await res.json();
-            displayNormalAnswer(data.answer, answerEl);
-            addXP(10);
-        } catch(e) {
-            answerEl.innerHTML = "<p style='padding:16px;'>Network error.</p>";
-        } finally {
-            chBtn.textContent = origText;
-            chBtn.disabled = false;
-        }
-    });
-}
-
-// =========================================
-// ASK MY NOTES
-// =========================================
-let latestNotes = "";
-if (latestNotes && document.getElementById('ask-notes-status')) {
-    document.getElementById('ask-notes-status').textContent = "Ready to answer questions about your last generated notes.";
-    document.getElementById('ask-notes-status').style.color = "var(--success)";
-}
-
-const amnBtn = document.getElementById('ask-notes-btn');
-if (amnBtn) {
-    amnBtn.addEventListener('click', async () => {
-        const input = document.getElementById('ask-notes-input').value.trim();
-        const answerEl = document.getElementById('ask-notes-answer');
-        
-        if (!input) return;
-        if (!latestNotes) {
-            answerEl.style.display = 'block';
-            answerEl.innerHTML = "<p style='padding:16px;'>Please generate some notes in the AI Notes tab first.</p>";
-            return;
-        }
-        
-        const origText = amnBtn.textContent;
-        amnBtn.textContent = 'Thinking...';
-        amnBtn.disabled = true;
-        answerEl.style.display = 'block';
-        answerEl.innerHTML = '<div class="loading-indicator">Reading your notes...</div>';
-        
-        try {
-            const res = await fetch(`${API_BASE}/ask`, {
-                method: "POST", headers: {"Content-Type":"application/json"},
-                body: JSON.stringify({ question: input, mode: "ask-my-notes", notes: latestNotes })
-            });
-            const data = await res.json();
-            displayNormalAnswer(data.answer, answerEl);
-            addXP(5);
-        } catch(e) {
-            answerEl.innerHTML = "<p style='padding:16px;'>Network error.</p>";
-        } finally {
-            amnBtn.textContent = origText;
-            amnBtn.disabled = false;
-        }
-    });
-}
-
-// =========================================
-// FLASHCARDS
-// =========================================
-let currentFlashcards = [];
-let fcIndex = 0;
-let fcShowingFront = true;
-
-const fcBtn = document.getElementById('fc-btn');
-if (fcBtn) {
-    fcBtn.addEventListener('click', async () => {
-        const input = document.getElementById('fc-input').value.trim();
-        if (!input) return;
-        
-        document.getElementById('fc-loading').style.display = 'block';
-        document.getElementById('fc-container').style.display = 'none';
-        fcBtn.disabled = true;
-        
-        try {
-            const res = await fetch(`${API_BASE}/ask`, {
-                method: "POST", headers: {"Content-Type":"application/json"},
-                body: JSON.stringify({ question: input, mode: "flashcards" })
-            });
-            const data = await res.json();
-            if (data.isJson && data.answer.cards) {
-                currentFlashcards = data.answer.cards;
-                fcIndex = 0;
-                renderFlashcard();
-                document.getElementById('fc-container').style.display = 'block';
-                addXP(10);
-                saveToolData("flashcards", { topic: input, cards: currentFlashcards });
-            } else {
-                document.getElementById('fc-loading').innerHTML = "<p style='padding:16px;'>Failed to generate flashcards.</p>";
-            }
-        } catch(e) {
-            document.getElementById('fc-loading').innerHTML = "<p style='padding:16px;'>Network error.</p>";
-        } finally {
-            document.getElementById('fc-loading').style.display = 'none';
-            fcBtn.disabled = false;
-        }
-    });
-    
-    document.getElementById('fc-flip').addEventListener('click', () => {
-        fcShowingFront = !fcShowingFront;
-        const textDiv = document.getElementById('fc-text');
-        textDiv.style.opacity = 0;
-        setTimeout(() => {
-            textDiv.textContent = fcShowingFront ? currentFlashcards[fcIndex].front : currentFlashcards[fcIndex].back;
-            document.getElementById('fc-card').style.background = fcShowingFront ? "var(--card-bg)" : "rgba(128, 0, 0, 0.03)";
-            textDiv.style.opacity = 1;
-        }, 150);
-    });
-    
-    document.getElementById('fc-next').addEventListener('click', () => {
-        if (fcIndex < currentFlashcards.length - 1) {
-            fcIndex++;
-            renderFlashcard();
-        }
-    });
-    
-    document.getElementById('fc-prev').addEventListener('click', () => {
-        if (fcIndex > 0) {
-            fcIndex--;
-            renderFlashcard();
-        }
-    });
-}
-
-function renderFlashcard() {
-    fcShowingFront = true;
-    document.getElementById('fc-progress').textContent = `Card ${fcIndex + 1} of ${currentFlashcards.length}`;
-    const textDiv = document.getElementById('fc-text');
-    textDiv.textContent = currentFlashcards[fcIndex].front;
-    textDiv.style.transition = "opacity 0.15s";
-    document.getElementById('fc-card').style.background = "var(--card-bg)";
-    
-    document.getElementById('fc-prev').disabled = fcIndex === 0;
-    document.getElementById('fc-next').disabled = fcIndex === currentFlashcards.length - 1;
-}
-
-// =========================================
-// ANSWER PRACTICE
-// =========================================
-let apCurrentQuestion = "";
-
-const apBtn = document.getElementById('ap-btn');
-if (apBtn) {
-    apBtn.addEventListener('click', async () => {
-        const topic = document.getElementById('ap-input').value.trim();
-        const diff = document.getElementById('ap-diff').value;
-        if (!topic) return;
-        
-        apBtn.disabled = true;
-        apBtn.textContent = 'Generating...';
-        
-        try {
-            const res = await fetch(`${API_BASE}/ask`, {
-                method: "POST", headers: {"Content-Type":"application/json"},
-                body: JSON.stringify({ question: topic, context: diff, mode: "answer-practice-q" })
-            });
-            const data = await res.json();
-            apCurrentQuestion = data.answer;
-            document.getElementById('ap-question-text').textContent = apCurrentQuestion;
-            document.getElementById('ap-answer-input').value = '';
-            document.getElementById('ap-workspace').style.display = 'block';
-            document.getElementById('ap-feedback').style.display = 'none';
-        } catch(e) {
-            alert('Failed to get question');
-        } finally {
-            apBtn.disabled = false;
-            apBtn.textContent = 'Get Question';
-        }
-    });
-    
-    document.getElementById('ap-submit-btn').addEventListener('click', async () => {
-        const answer = document.getElementById('ap-answer-input').value.trim();
-        if (!answer) return;
-        
-        const subBtn = document.getElementById('ap-submit-btn');
-        subBtn.disabled = true;
-        subBtn.textContent = 'Evaluating...';
-        
-        try {
-            const res = await fetch(`${API_BASE}/ask`, {
-                method: "POST", headers: {"Content-Type":"application/json"},
-                body: JSON.stringify({ question: answer, context: apCurrentQuestion, mode: "answer-practice-eval" })
-            });
-            const data = await res.json();
-            if (data.isJson) {
-                const fb = data.answer;
-                const fbDiv = document.getElementById('ap-feedback');
-                fbDiv.style.display = 'block';
-                fbDiv.innerHTML = `
-                    <div class="dashboard-card" style="border-left: 4px solid var(--primary);">
-                        <div style="font-size: 24px; font-weight: 800; color: var(--primary); margin-bottom: 12px;">Score: ${fb.score}</div>
-                        <p><strong>Correct:</strong> ${fb.correct}</p>
-                        <p style="margin-top:8px;"><strong>Missing:</strong> ${fb.missing}</p>
-                        <div style="margin-top:16px; padding: 12px; background: rgba(34, 197, 94, 0.05); border: 1px solid var(--success); border-radius: 6px;">
-                            <p style="font-size: 12px; color: var(--success); font-weight: bold; margin-bottom: 4px;">Improved Answer Example:</p>
-                            ${fb.improved}
-                        </div>
-                        <p style="margin-top:12px; font-size: 12px; color: var(--text-sec);">${fb.explanation}</p>
-                    </div>
-                `;
-                addXP(15);
-                saveToolData("answer_practice", { question: apCurrentQuestion, answer: answer, feedback: fb });
-            }
-        } catch(e) {
-            alert('Failed to evaluate');
-        } finally {
-            subBtn.disabled = false;
-            subBtn.textContent = 'Submit for Review';
-        }
-    });
-}
-
-// =========================================
-// MOCK TEST
-// =========================================
-let mtData = null;
-
-const mtBtn = document.getElementById('mt-btn');
-if (mtBtn) {
-    mtBtn.addEventListener('click', async () => {
-        const topic = document.getElementById('mt-input').value.trim();
-        if (!topic) return;
-        
-        document.getElementById('mt-loading').style.display = 'block';
-        document.getElementById('mt-workspace').style.display = 'none';
-        mtBtn.disabled = true;
-        
-        try {
-            const res = await fetch(`${API_BASE}/ask`, {
-                method: "POST", headers: {"Content-Type":"application/json"},
-                body: JSON.stringify({ question: topic, mode: "mock-test-gen" })
-            });
-            const data = await res.json();
-            if (data.isJson) {
-                mtData = data.answer;
-                renderMockTest();
-                document.getElementById('mt-workspace').style.display = 'block';
-                addXP(5);
-            }
-        } catch(e) {
-            document.getElementById('mt-loading').innerHTML = "<p>Network error.</p>";
-        } finally {
-            document.getElementById('mt-loading').style.display = 'none';
-            mtBtn.disabled = false;
-        }
-    });
-}
-
-function renderMockTest() {
-    const ws = document.getElementById('mt-workspace');
-    let html = `<div class="dashboard-card" style="padding: 32px;"><h3 style="font-size: 20px; border-bottom: 1px solid var(--border-color); padding-bottom: 12px; margin-bottom: 24px;">Section 1: Multiple Choice</h3>`;
-    
-    mtData.mcqs.forEach((mcq, idx) => {
-        html += `<div style="margin-bottom: 24px;" class="mt-mcq-item">
-            <p style="font-weight: 600; margin-bottom: 12px;">${idx + 1}. ${mcq.question}</p>
-            <div style="display: flex; flex-direction: column; gap: 8px;">
-                ${mcq.options.map(opt => `
-                    <label style="display: flex; align-items: center; gap: 8px; padding: 10px; border: 1px solid var(--border-color); border-radius: 6px; cursor: pointer;">
-                        <input type="radio" name="mt-mcq-${idx}" value="${opt.letter}" />
-                        ${opt.letter}) ${opt.text}
-                    </label>
-                `).join('')}
-            </div>
-        </div>`;
-    });
-    
-    html += `<h3 style="font-size: 20px; border-bottom: 1px solid var(--border-color); padding-bottom: 12px; margin-bottom: 24px; margin-top: 48px;">Section 2: Short Answer</h3>`;
-    
-    mtData.short_answers.forEach((sa, idx) => {
-        html += `<div style="margin-bottom: 24px;" class="mt-sa-item">
-            <p style="font-weight: 600; margin-bottom: 12px;">${idx + 1}. ${sa.question}</p>
-            <textarea id="mt-sa-${idx}" rows="3" style="width: 100%; border: 1px solid var(--border-color); border-radius: 6px; padding: 12px; font-family: inherit; font-size: 14px; outline: none;"></textarea>
-        </div>`;
-    });
-    
-    html += `<button id="mt-submit-btn" class="primary-btn" style="width: 100%; padding: 14px; font-size: 16px; margin-top: 24px;">Submit Test</button>`;
-    html += `</div><div id="mt-results" class="mt-4" style="display:none;"></div>`;
-    
-    ws.innerHTML = html;
-    
-    document.getElementById('mt-submit-btn').addEventListener('click', evaluateMockTest);
-}
-
-async function evaluateMockTest() {
-    const subBtn = document.getElementById('mt-submit-btn');
-    subBtn.disabled = true;
-    subBtn.textContent = 'Grading Test...';
-    
-    let mcqScore = 0;
-    mtData.mcqs.forEach((mcq, idx) => {
-        const selected = document.querySelector(`input[name="mt-mcq-${idx}"]:checked`);
-        if (selected && selected.value === mcq.correctAnswer) {
-            mcqScore++;
-        }
-    });
-    
-    const shortAnswers = mtData.short_answers.map((sa, idx) => ({
-        question: sa.question,
-        answer: document.getElementById(`mt-sa-${idx}`).value.trim()
-    }));
-    
-    try {
-        const res = await fetch(`${API_BASE}/ask`, {
-            method: "POST", headers: {"Content-Type":"application/json"},
-            body: JSON.stringify({ question: JSON.stringify(shortAnswers), mode: "mock-test-eval" })
-        });
-        const data = await res.json();
-        
-        let html = `<div class="dashboard-card" style="border-left: 4px solid var(--primary);">
-            <div style="font-size: 24px; font-weight: 800; color: var(--primary); margin-bottom: 12px;">MCQ Score: ${mcqScore} / ${mtData.mcqs.length}</div>`;
-            
-        if (data.isJson && data.answer.evaluations) {
-            html += `<h4 style="margin-top: 24px; margin-bottom: 12px;">Short Answer Evaluations:</h4>`;
-            data.answer.evaluations.forEach((ev, idx) => {
-                html += `<div style="margin-bottom: 16px; padding: 12px; background: rgba(128, 0, 0, 0.02); border-radius: 6px;">
-                    <p style="font-weight: 600;">Q: ${shortAnswers[idx].question}</p>
-                    <p style="color: var(--text-sec); margin-top: 4px;">Your Answer: ${shortAnswers[idx].answer || '(No answer)'}</p>
-                    <p style="color: var(--primary); font-weight: 600; margin-top: 8px;">Score: ${ev.score}</p>
-                    <p style="font-size: 12px; margin-top: 4px;">${ev.feedback}</p>
-                </div>`;
-            });
-        }
-        html += `</div>`;
-        document.getElementById('mt-results').innerHTML = html;
-        document.getElementById('mt-results').style.display = 'block';
-        addXP(50);
-        saveToolData("mock_tests", { mcqScore: mcqScore, shortAnswers: shortAnswers, evaluations: data.answer.evaluations || [] });
-        window.scrollTo(0, document.body.scrollHeight);
-    } catch(e) {
-        alert('Failed to grade test');
-    } finally {
-        subBtn.style.display = 'none';
-    }
-}
-
-// Add Enter key support for new forms
-document.getElementById('fc-input')?.addEventListener('keypress', (e) => { if(e.key === 'Enter') document.getElementById('fc-btn').click(); });
-document.getElementById('ap-input')?.addEventListener('keypress', (e) => { if(e.key === 'Enter') document.getElementById('ap-btn').click(); });
-document.getElementById('mt-input')?.addEventListener('keypress', (e) => { if(e.key === 'Enter') document.getElementById('mt-btn').click(); });
-document.getElementById('ask-notes-input')?.addEventListener('keypress', (e) => { if(e.key === 'Enter') document.getElementById('ask-notes-btn').click(); });
-
-// =========================================
-// IMAGE TO QUESTION
-// =========================================
 const iqInput = document.getElementById('iq-file');
 const iqNameDisplay = document.getElementById('iq-file-name');
 const iqBtn = document.getElementById('iq-btn');
@@ -1384,5 +857,33 @@ document.addEventListener('click', (e) => {
     if (!e.target.closest('.notification-wrapper')) {
         const dropdown = document.getElementById('notif-dropdown');
         if (dropdown) dropdown.style.display = 'none';
+    }
+});
+
+// Global Clear Button Logic
+document.addEventListener('click', (e) => {
+    if (e.target.classList.contains('tool-clear-btn')) {
+        const targetBtnId = e.target.getAttribute('data-target');
+        const askBox = e.target.closest('.ask-box');
+        if (askBox) {
+            const input = askBox.querySelector('input');
+            if (input) {
+                input.value = '';
+                input.focus();
+            }
+        }
+        // Find the adjacent answer area
+        let card = e.target.closest('.dashboard-card');
+        if (card) {
+            let nextEl = card.nextElementSibling;
+            while(nextEl) {
+                if (nextEl.classList.contains('ai-answer-area')) {
+                    nextEl.innerHTML = '';
+                    nextEl.style.display = 'none';
+                    break;
+                }
+                nextEl = nextEl.nextElementSibling;
+            }
+        }
     }
 });
