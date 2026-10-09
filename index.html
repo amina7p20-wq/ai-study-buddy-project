@@ -8,8 +8,50 @@
     <link rel="stylesheet" href="style.css">
     <!-- Markdown Parser -->
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+    <!-- Firebase Compat SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/10.14.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.14.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore-compat.js"></script>
+
 </head>
 <body>
+
+    <!-- AUTHENTICATION WRAPPER -->
+    <div id="auth-wrapper" style="height: 100vh; width: 100vw; background: var(--bg-color); display: flex; align-items: center; justify-content: center; position: fixed; top: 0; left: 0; z-index: 1000;">
+        <div class="dashboard-card" style="width: 400px; padding: 40px; text-align: center;">
+            <h1 style="color: var(--primary-dark); margin-bottom: 8px; font-size: 28px;">StudyFlow</h1>
+            <p style="color: var(--text-sec); margin-bottom: 32px;">Turn confusion into clarity.</p>
+            
+            <div id="auth-login-form">
+                <input type="email" id="auth-email" placeholder="Email" style="width: 100%; padding: 12px; margin-bottom: 16px; border: 1px solid var(--border-color); border-radius: 6px; font-family: inherit;" />
+                <input type="password" id="auth-password" placeholder="Password" style="width: 100%; padding: 12px; margin-bottom: 16px; border: 1px solid var(--border-color); border-radius: 6px; font-family: inherit;" />
+                <button id="auth-login-btn" class="primary-btn" style="width: 100%; margin-bottom: 16px;">Log In</button>
+                <p style="font-size: 14px; margin-bottom: 16px;">Don't have an account? <a href="#" id="auth-switch-signup" style="color: var(--primary); font-weight: bold; text-decoration: none;">Sign Up</a></p>
+            </div>
+
+            <div id="auth-signup-form" style="display: none;">
+                <input type="text" id="auth-name-up" placeholder="Full Name" style="width: 100%; padding: 12px; margin-bottom: 16px; border: 1px solid var(--border-color); border-radius: 6px; font-family: inherit;" />
+                <input type="email" id="auth-email-up" placeholder="Email" style="width: 100%; padding: 12px; margin-bottom: 16px; border: 1px solid var(--border-color); border-radius: 6px; font-family: inherit;" />
+                <input type="password" id="auth-password-up" placeholder="Password" style="width: 100%; padding: 12px; margin-bottom: 16px; border: 1px solid var(--border-color); border-radius: 6px; font-family: inherit;" />
+                <button id="auth-signup-btn" class="primary-btn" style="width: 100%; margin-bottom: 16px;">Create Account</button>
+                <p style="font-size: 14px; margin-bottom: 16px;">Already have an account? <a href="#" id="auth-switch-login" style="color: var(--primary); font-weight: bold; text-decoration: none;">Log In</a></p>
+            </div>
+
+            <div style="display: flex; align-items: center; margin-bottom: 16px;">
+                <hr style="flex: 1; border: none; border-top: 1px solid var(--border-color);">
+                <span style="padding: 0 10px; color: var(--text-sec); font-size: 12px;">OR</span>
+                <hr style="flex: 1; border: none; border-top: 1px solid var(--border-color);">
+            </div>
+
+            <button id="auth-google-btn" style="width: 100%; padding: 12px; background: white; border: 1px solid var(--border-color); border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; font-weight: 600; color: var(--text-main); font-family: inherit;">
+                <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" width="18" />
+                Continue with Google
+            </button>
+            <div id="auth-error" style="color: var(--error); margin-top: 16px; font-size: 13px; min-height: 20px;"></div>
+        </div>
+    </div>
+
 
 <div class="app-container">
     
@@ -60,7 +102,7 @@
     </aside>
 
     <!-- MAIN CONTENT -->
-    <div class="main-content">
+    <div class="main-content" id="app-main" style="display:none;">
         
         <!-- HEADER -->
         <header class="top-header">

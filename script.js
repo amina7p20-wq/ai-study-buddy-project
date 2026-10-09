@@ -1,27 +1,41 @@
 const API_BASE = window.location.hostname === "127.0.0.1" || window.location.hostname === "localhost" ? "http://127.0.0.1:5000" : "";
 
-// =========================================
-// DATA & STATE MANAGEMENT (LocalStorage)
-// =========================================
 
+// =========================================
+// FIREBASE INITIALIZATION & AUTH
+// =========================================
+const firebaseConfig = {
+  apiKey: "AIzaSyA5-2MfA6an1gI5l-9GxNfmpdaHZ_8FEG4",
+  authDomain: "studyflow-amina.firebaseapp.com",
+  projectId: "studyflow-amina",
+  storageBucket: "studyflow-amina.firebasestorage.app",
+  messagingSenderId: "954250301378",
+  appId: "1:954250301378:web:4eeb27d002e62c4464905b"
+};
+
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
+
+let currentUser = null;
+
+// Keep defaults for complex UI stuff, but XP/Activity/Sessions come from Firebase
 const defaultData = {
     streak: { current: 3, longest: 7, days: [] },
-    progress: { completion: 15, xp: 450, totalTime: 12 },
+    progress: { completion: 15, xp: 0, totalTime: 12 },
     schedule: [
-        { day: 'Today', task: 'Python — Functions', status: 'pending' },
-        { day: 'Tomorrow', task: 'DBMS — Normalization', status: 'pending' },
-        { day: 'Upcoming', task: 'Java — OOP', status: 'pending' }
+        { day: 'Today', task: 'Python - Functions', status: 'pending' },
+        { day: 'Tomorrow', task: 'DBMS - Normalization', status: 'pending' },
+        { day: 'Upcoming', task: 'Java - OOP', status: 'pending' }
     ],
-    recentActivity: [
-        { text: 'Signed in', date: new Date().toISOString() }
-    ],
+    recentActivity: [],
     weakTopics: [
         { topic: "Inheritance in Java", attempts: 3, accuracy: "40%" },
         { topic: "SQL Joins", attempts: 2, accuracy: "50%" }
     ],
     continueLearning: [
-        { subject: "Python", progress: 60, icon: "🐍" },
-        { subject: "DBMS", progress: 30, icon: "🗄️" },
+        { subject: "Python", progress: 60, icon: "💻" },
+        { subject: "DBMS", progress: 30, icon: "📊" },
         { subject: "Java", progress: 15, icon: "☕" }
     ],
     studyPath: [
@@ -33,35 +47,155 @@ const defaultData = {
         { text: "File Handling", status: "pending" }
     ],
     mcqsSolved: 0,
-    sessions: 12
+    sessions: 0
 };
 
-function loadData() {
-    let data = localStorage.getItem('studyFlowData');
-    if (!data) {
-        saveData(defaultData);
-        return defaultData;
+let userData = JSON.parse(JSON.stringify(defaultData));
+
+auth.onAuthStateChanged(async (user) => {
+    if (user) {
+        currentUser = user;
+        document.getElementById('auth-wrapper').style.display = 'none';
+        document.getElementById('app-sidebar').style.display = 'flex';
+        document.getElementById('app-main').style.display = 'flex';
+        document.getElementById('user-greeting').textContent = `Hello, ${user.displayName || 'student'}!`;
+        
+        await loadUserData();
+        // Since the user is authenticated, we render the dashboard normally
+        if (typeof renderDashboard === 'function') renderDashboard();
+    } else {
+        currentUser = null;
+        document.getElementById('auth-wrapper').style.display = 'flex';
+        document.getElementById('app-sidebar').style.display = 'none';
+        document.getElementById('app-main').style.display = 'none';
     }
-    return JSON.parse(data);
+});
+
+// Auth UI Logic
+const authErr = document.getElementById('auth-error');
+const setAuthError = (msg) => { authErr.textContent = msg; };
+
+document.getElementById('auth-switch-signup')?.addEventListener('click', (e) => {
+    e.preventDefault();
+    document.getElementById('auth-login-form').style.display = 'none';
+    document.getElementById('auth-signup-form').style.display = 'block';
+    setAuthError('');
+});
+
+document.getElementById('auth-switch-login')?.addEventListener('click', (e) => {
+    e.preventDefault();
+    document.getElementById('auth-signup-form').style.display = 'none';
+    document.getElementById('auth-login-form').style.display = 'block';
+    setAuthError('');
+});
+
+document.getElementById('auth-login-btn')?.addEventListener('click', async () => {
+    const email = document.getElementById('auth-email').value;
+    const password = document.getElementById('auth-password').value;
+    if(!email || !password) return setAuthError('Please fill all fields');
+    try {
+        await auth.signInWithEmailAndPassword(email, password);
+    } catch(e) { setAuthError(e.message); }
+});
+
+document.getElementById('auth-signup-btn')?.addEventListener('click', async () => {
+    const name = document.getElementById('auth-name-up').value;
+    const email = document.getElementById('auth-email-up').value;
+    const password = document.getElementById('auth-password-up').value;
+    if(!name || !email || !password) return setAuthError('Please fill all fields');
+    try {
+        const cred = await auth.createUserWithEmailAndPassword(email, password);
+        await cred.user.updateProfile({ displayName: name });
+        await db.collection('users').doc(cred.user.uid).set({
+            uid: cred.user.uid,
+            name: name,
+            email: email,
+            createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+            xp: 0,
+            sessions: 0
+        });
+        auth.updateCurrentUser(cred.user);
+    } catch(e) { setAuthError(e.message); }
+});
+
+document.getElementById('auth-google-btn')?.addEventListener('click', async () => {
+    const provider = new firebase.auth.GoogleAuthProvider();
+    try {
+        const result = await auth.signInWithPopup(provider);
+        const userRef = db.collection('users').doc(result.user.uid);
+        const doc = await userRef.get();
+        if (!doc.exists) {
+            await userRef.set({
+                uid: result.user.uid,
+                name: result.user.displayName,
+                email: result.user.email,
+                photoURL: result.user.photoURL,
+                createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                xp: 0,
+                sessions: 0
+            });
+        }
+    } catch(e) { setAuthError(e.message); }
+});
+
+document.getElementById('logout-btn')?.addEventListener('click', (e) => {
+    e.preventDefault();
+    auth.signOut();
+});
+
+// =========================================
+// DATA & STATE MANAGEMENT (Firestore)
+// =========================================
+async function loadUserData() {
+    if (!currentUser) return;
+    try {
+        const doc = await db.collection('users').doc(currentUser.uid).get();
+        if (doc.exists) {
+            const data = doc.data();
+            userData.progress.xp = data.xp || 0;
+            userData.sessions = data.sessions || 0;
+            userData.weakTopics = data.weakTopics || userData.weakTopics;
+        }
+        
+        const activitySnapshot = await db.collection('users').doc(currentUser.uid).collection('activity')
+            .orderBy('timestamp', 'desc').limit(5).get();
+        userData.recentActivity = activitySnapshot.docs.map(d => ({ text: d.data().text, date: d.data().date }));
+    } catch (e) {
+        console.error("Error loading user data:", e);
+    }
 }
 
-function saveData(data) {
-    localStorage.setItem('studyFlowData', JSON.stringify(data));
-}
-
-let userData = loadData();
-
-function logActivity(text) {
-    userData.recentActivity.unshift({ text, date: new Date().toISOString() });
-    if(userData.recentActivity.length > 5) userData.recentActivity.pop();
-    saveData(userData);
-    renderRecentActivity();
-}
-
-function addXP(amount) {
+async function addXP(amount) {
+    if (!currentUser) return;
     userData.progress.xp += amount;
-    saveData(userData);
-    renderProgressStats();
+    userData.sessions += 1;
+    if(typeof renderProgressStats === 'function') renderProgressStats();
+    if(typeof renderDashboard === 'function') renderDashboard();
+    try {
+        await db.collection('users').doc(currentUser.uid).update({
+            xp: firebase.firestore.FieldValue.increment(amount),
+            sessions: firebase.firestore.FieldValue.increment(1)
+        });
+    } catch (e) { console.error("XP update failed", e); }
+}
+
+async function logActivity(text) {
+    if (!currentUser) return;
+    const act = { text, date: new Date().toLocaleDateString(), timestamp: firebase.firestore.FieldValue.serverTimestamp() };
+    userData.recentActivity.unshift({ text, date: act.date });
+    if(userData.recentActivity.length > 5) userData.recentActivity.pop();
+    if(typeof renderRecentActivity === 'function') renderRecentActivity();
+    try {
+        await db.collection('users').doc(currentUser.uid).collection('activity').add(act);
+    } catch (e) { console.error("Activity log failed", e); }
+}
+
+async function saveToolData(toolName, dataObj) {
+    if (!currentUser) return;
+    try {
+        dataObj.timestamp = firebase.firestore.FieldValue.serverTimestamp();
+        await db.collection('users').doc(currentUser.uid).collection(toolName).add(dataObj);
+    } catch (e) { console.error("Failed to save tool data", e); }
 }
 
 // =========================================
@@ -292,7 +426,18 @@ async function fetchAIResponse(question, mode, buttonEl, answerEl) {
                 userData.sessions++;
                 addXP(10);
                 if (mode === "notes") {
-                    localStorage.setItem('studyFlowLatestNotes', data.answer);
+                    /* localStorage removed */
+                if (mode === "notes") {
+                    saveToolData("generated_notes", { topic: document.getElementById('search-input').value || "AI Notes", content: data.answer });
+                }
+                if (mode === "planner") {
+                    saveToolData("planner", { topic: document.getElementById('search-input').value, content: data.answer });
+                }
+                if (mode === "mcq") {
+                    saveToolData("mcqs", { topic: document.getElementById('search-input').value, content: data.answer });
+                }
+
+
                     latestNotes = data.answer;
                     const statusEl = document.getElementById('ask-notes-status');
                     if (statusEl) {
@@ -645,7 +790,7 @@ if (chBtn) {
 // =========================================
 // ASK MY NOTES
 // =========================================
-let latestNotes = localStorage.getItem('studyFlowLatestNotes') || "";
+let latestNotes = "";
 if (latestNotes && document.getElementById('ask-notes-status')) {
     document.getElementById('ask-notes-status').textContent = "Ready to answer questions about your last generated notes.";
     document.getElementById('ask-notes-status').style.color = "var(--success)";
@@ -716,6 +861,7 @@ if (fcBtn) {
                 renderFlashcard();
                 document.getElementById('fc-container').style.display = 'block';
                 addXP(10);
+                saveToolData("flashcards", { topic: input, cards: currentFlashcards });
             } else {
                 document.getElementById('fc-loading').innerHTML = "<p style='padding:16px;'>Failed to generate flashcards.</p>";
             }
@@ -830,6 +976,7 @@ if (apBtn) {
                     </div>
                 `;
                 addXP(15);
+                saveToolData("answer_practice", { question: apCurrentQuestion, answer: answer, feedback: fb });
             }
         } catch(e) {
             alert('Failed to evaluate');
@@ -954,6 +1101,7 @@ async function evaluateMockTest() {
         document.getElementById('mt-results').innerHTML = html;
         document.getElementById('mt-results').style.display = 'block';
         addXP(50);
+        saveToolData("mock_tests", { mcqScore: mcqScore, shortAnswers: shortAnswers, evaluations: data.answer.evaluations || [] });
         window.scrollTo(0, document.body.scrollHeight);
     } catch(e) {
         alert('Failed to grade test');
