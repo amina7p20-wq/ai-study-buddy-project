@@ -56,8 +56,10 @@ auth.onAuthStateChanged(async (user) => {
     if (user) {
         currentUser = user;
         document.getElementById('auth-wrapper').style.display = 'none';
-        document.getElementById('app-sidebar').style.display = 'flex';
-        document.getElementById('app-main').style.display = 'flex';
+        const sidebarEl = document.getElementById('sidebar');
+        if (sidebarEl) sidebarEl.style.display = 'flex';
+        const mainEl = document.getElementById('app-main');
+        if (mainEl) mainEl.style.display = 'flex';
         const greetingEl = document.getElementById('user-greeting');
         if (greetingEl) {
             greetingEl.textContent = `Hello, ${user.displayName || 'student'}!`;
@@ -69,8 +71,10 @@ auth.onAuthStateChanged(async (user) => {
     } else {
         currentUser = null;
         document.getElementById('auth-wrapper').style.display = 'flex';
-        document.getElementById('app-sidebar').style.display = 'none';
-        document.getElementById('app-main').style.display = 'none';
+        const sidebarEl = document.getElementById('sidebar');
+        if (sidebarEl) sidebarEl.style.display = 'none';
+        const mainEl = document.getElementById('app-main');
+        if (mainEl) mainEl.style.display = 'none';
     }
 });
 
