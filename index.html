@@ -608,22 +608,28 @@
             <!-- PAGE: VOICE TUTOR              -->
             <!-- ============================== -->
             <div id="page-voice-tutor" class="page">
-                <div class="page-header">
-                    <h2>🎙️ Voice Tutor</h2>
-                    <p>Practice speaking and listening. Ask questions with your voice.</p>
-                </div>
-                <div class="dashboard-card" style="text-align: center; padding: 48px 24px;">
-                    <div id="vt-status" style="margin-bottom: 24px; color: var(--text-sec);">Click the microphone to start speaking...</div>
-                    <button id="vt-mic-btn" style="width: 80px; height: 80px; border-radius: 50%; background: var(--primary); color: white; border: none; font-size: 32px; cursor: pointer; box-shadow: 0 4px 12px rgba(128,0,0,0.2); transition: transform 0.2s;">🎙️</button>
-                    <div id="vt-text-fallback" style="margin-top: 32px;">
-                        <input type="text" id="vt-input" placeholder="Or type your question here..." style="width: 80%; max-width: 400px; padding: 12px; border: 1px solid var(--border-color); border-radius: 6px; font-family: inherit; margin-right: 8px;" />
-                        <button id="vt-send-btn" class="primary-btn">Send</button>
-                    </div>
-                </div>
-                <div id="vt-answer" class="ai-answer-area mt-4"></div>
-            </div>
-            <!-- ============================== -->
-            <!-- PAGE: COMING SOON              -->
+    <div class="page-header">
+        <h2>🎤 Voice Tutor</h2>
+        <p>Practice speaking and listening. Ask questions with your voice.</p>
+    </div>
+    <div class="dashboard-card" style="text-align: center; padding: 48px 24px;">
+        <div id="vt-status" style="margin-bottom: 24px; font-weight: 600; color: var(--primary);">Status: Idle</div>
+        <div style="display: flex; gap: 12px; max-width: 600px; margin: 0 auto;">
+            <button id="vt-start-listen-btn" class="primary-btn" style="flex: 1; padding: 16px; font-size: 16px; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                Start Listening
+            </button>
+            <button id="vt-stop-listen-btn" class="primary-btn" style="flex: 1; padding: 16px; font-size: 16px; background: var(--error); display: none; align-items: center; justify-content: center; gap: 8px;">
+                Stop Listening
+            </button>
+            <button id="vt-stop-speak-btn" class="primary-btn" style="flex: 1; padding: 16px; font-size: 16px; background: var(--text-sec); display: none; align-items: center; justify-content: center; gap: 8px;">
+                Stop Speaking
+            </button>
+        </div>
+    </div>
+    <div id="vt-answer" class="ai-answer-area mt-4"></div>
+</div>
+<!-- ============================== -->
+<!-- PAGE: COMING SOON              -->
             <!-- ============================== -->
             <div id="page-coming-soon" class="page">
                 <div class="coming-soon-container text-center">

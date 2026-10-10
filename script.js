@@ -454,12 +454,15 @@ async function fetchAIResponse(question, mode, buttonEl, answerEl) {
         return;
     }
 
-    // State
-    const originalText = buttonEl.textContent;
+    if (!buttonEl.dataset.originalText) {
+        buttonEl.dataset.originalText = buttonEl.innerHTML;
+    }
     buttonEl.disabled = true;
-    buttonEl.textContent = "Thinking...";
+    buttonEl.style.opacity = '0.7';
+    buttonEl.innerHTML = `<span style="display:inline-block; animation: pulse 1.5s infinite;">Processing...</span>`;
+    
     answerEl.style.display = "block";
-    answerEl.innerHTML = '<div class="loading-indicator">StudyFlow is thinking...</div>';
+    answerEl.innerHTML = `<div class="loading-indicator">Generating...</div>`;
 
     try {
         const response = await fetch(`${API_BASE}/ask`, {
@@ -469,10 +472,7 @@ async function fetchAIResponse(question, mode, buttonEl, answerEl) {
         });
 
         if (!response.ok) {
-            answerEl.innerHTML = mode === "mcq" 
-                ? "<p style='padding:16px;'>Could not generate the quiz. Please try again.</p>"
-                : "<p style='padding:16px;'>Something went wrong. Please try again.</p>";
-            console.error("Backend failed:", response.statusText);
+            throw new Error(`API error: ${response.status}`);
         } else {
             const data = await response.json();
             
@@ -485,19 +485,20 @@ async function fetchAIResponse(question, mode, buttonEl, answerEl) {
                 answerEl.innerHTML = "<p style='padding:16px;'>Could not generate the quiz. Please try again.</p>";
             } else {
                 displayNormalAnswer(data.answer, answerEl);
+                appendToolControls(answerEl, question, mode);
                 logActivity(`Used ${mode} for: ${question}`);
                 userData.sessions++;
                 addXP(10);
                 if (mode === "notes") {
                     /* localStorage removed */
                 if (mode === "notes") {
-                    saveToolData("generated_notes", { topic: document.getElementById('search-input').value || "AI Notes", content: data.answer });
+                    saveToolData("generated_notes", { topic: question || "AI Notes", content: data.answer });
                 }
                 if (mode === "planner") {
-                    saveToolData("planner", { topic: document.getElementById('search-input').value, content: data.answer });
+                    saveToolData("planner", { topic: question, content: data.answer });
                 }
                 if (mode === "mcq") {
-                    saveToolData("mcqs", { topic: document.getElementById('search-input').value, content: data.answer });
+                    saveToolData("mcqs", { topic: question, content: data.answer });
                 }
 
 
@@ -513,12 +514,15 @@ async function fetchAIResponse(question, mode, buttonEl, answerEl) {
         }
     } catch (error) {
         answerEl.innerHTML = mode === "mcq" 
-            ? "<p style='padding:16px;'>Could not generate the quiz. Please try again.</p>"
-            : "<p style='padding:16px;'>Something went wrong. Please try again.</p>";
+            ? "<div style='color:var(--error); padding: 16px; border: 1px solid var(--error); border-radius: 8px; background: rgba(220, 53, 69, 0.05);'><strong>Error:</strong> Could not generate the quiz. Please try again.</div>"
+            : "<div style='color:var(--error); padding: 16px; border: 1px solid var(--error); border-radius: 8px; background: rgba(220, 53, 69, 0.05);'><strong>Connection Error:</strong> AI is temporarily busy. Please try again.</div>";
         console.error(error);
     } finally {
-        buttonEl.disabled = false;
-        buttonEl.textContent = originalText;
+        if(buttonEl) {
+            buttonEl.disabled = false;
+            buttonEl.style.opacity = '1';
+            buttonEl.innerHTML = buttonEl.dataset.originalText;
+        }
     }
 }
 
@@ -930,5 +934,72 @@ window.newChat = function(btn) {
             const clearBtn = page.querySelector('#iq-clear-btn, #pdf-clear-btn');
             if (clearBtn) clearBtn.click();
         }
+    }
+}
+
+
+// =========================================
+// CHATGPT STYLE TOOL CONTROLS
+// =========================================
+function appendToolControls(answerEl, promptStr, mode) {
+    let controls = answerEl.querySelector('.tool-controls');
+    if (!controls) {
+        controls = document.createElement('div');
+        controls.className = 'tool-controls';
+        controls.style.cssText = 'display: flex; gap: 8px; margin-top: 12px; justify-content: flex-end; flex-wrap: wrap;';
+        answerEl.appendChild(controls);
+    }
+    const safePrompt = String(promptStr).replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+    controls.innerHTML = `
+        <button class="secondary-btn btn-sm copy-btn" onclick="copyResult(this)" style="padding: 6px 12px; font-size:12px; background:transparent; border:1px solid var(--primary); color:var(--primary); cursor:pointer; border-radius:4px;">Copy Response</button>
+        <button class="secondary-btn btn-sm" onclick="regenerateResponse(this, '${safePrompt}', '${mode}')" style="padding: 6px 12px; font-size:12px; background:transparent; border:1px solid var(--primary); color:var(--primary); cursor:pointer; border-radius:4px;">Regenerate</button>
+        <button class="secondary-btn btn-sm" onclick="clearCurrent(this)" style="padding: 6px 12px; font-size:12px; background:transparent; border:1px solid var(--text-sec); color:var(--text-sec); cursor:pointer; border-radius:4px;">Clear</button>
+        <button class="primary-btn btn-sm" onclick="newChat(this)" style="padding: 6px 12px; font-size:12px; border:none; cursor:pointer; border-radius:4px;">New Chat</button>
+    `;
+}
+
+window.copyResult = function(btn) {
+    const answerArea = btn.closest('.ai-answer-area');
+    if (answerArea) {
+        const text = Array.from(answerArea.querySelectorAll('.dashboard-card')).map(card => card.innerText).join('\n');
+        navigator.clipboard.writeText(text);
+        const original = btn.innerText;
+        btn.innerText = 'Copied!';
+        setTimeout(() => btn.innerText = original, 2000);
+    }
+}
+
+window.clearCurrent = function(btn) {
+    const answerArea = btn.closest('.ai-answer-area');
+    if (answerArea) {
+        answerArea.innerHTML = '';
+        answerArea.style.display = 'none';
+    }
+}
+
+window.newChat = function(btn) {
+    window.clearCurrent(btn);
+    const page = btn.closest('.page');
+    if (page) {
+        const input = page.querySelector('input[type="text"]');
+        if (input) {
+            input.value = '';
+            input.focus();
+        }
+        const fileInput = page.querySelector('input[type="file"]');
+        if (fileInput) {
+            const clearBtn = page.querySelector('#iq-clear-btn, #pdf-clear-btn');
+            if (clearBtn) clearBtn.click();
+        }
+    }
+}
+
+window.regenerateResponse = function(btn, promptStr, mode) {
+    const page = btn.closest('.page');
+    if (page) {
+        const input = page.querySelector('input[type="text"]');
+        if (input && promptStr && promptStr !== 'undefined') input.value = promptStr;
+        const generateBtn = page.querySelector('.ask-box button, .form-card .primary-btn:not([style*="display: none"])');
+        if (generateBtn) generateBtn.click();
     }
 }
