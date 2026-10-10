@@ -561,11 +561,7 @@ function setupInput(inputId, btnId, mode, answerId) {
         fetchAIResponse(input.value.trim(), mode, btn, answer);
     });
 
-    input.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') {
-            btn.click();
-        }
-    });
+
 }
 
 // Home Assistant
@@ -1283,3 +1279,31 @@ window.regenerateResponse = function(btn, promptStr, mode) {
         if (generateBtn) generateBtn.click();
     }
 }
+
+// =========================================
+// GLOBAL ENTER KEY HANDLER
+// =========================================
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+        const active = document.activeElement;
+        if (!active || (active.tagName !== 'INPUT' && active.tagName !== 'TEXTAREA')) return;
+        
+        // Allow Shift+Enter for textareas
+        if (active.tagName === 'TEXTAREA' && e.shiftKey) return;
+        
+        // Only target tool inputs, not the main search bar or other general inputs unless they are tools
+        if (active.id === 'main-search-input') return;
+
+        const container = active.closest('.ask-box, .form-card, .dashboard-card');
+        if (container) {
+            // Find the primary generate/submit button inside this container
+            // Exclude control buttons (clear, remove, stop, copy, regenerate)
+            const btn = container.querySelector('button.primary-btn, button[id$="-btn"]:not([id*="clear"]):not([id*="stop"])');
+            
+            if (btn && !btn.disabled) {
+                e.preventDefault();
+                btn.click();
+            }
+        }
+    }
+});
