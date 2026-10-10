@@ -654,6 +654,281 @@ if(pdfInput && pdfBtn) {
         }
     });
 }
+// =========================================
+// FLASHCARDS
+// =========================================
+let currentFlashcards = [];
+let fcIndex = 0;
+let fcShowingFront = true;
+
+const fcBtn = document.getElementById('fc-btn');
+if (fcBtn) {
+    fcBtn.addEventListener('click', async () => {
+        const input = document.getElementById('fc-input').value.trim();
+        if (!input) return;
+        
+        document.getElementById('fc-loading').style.display = 'block';
+        document.getElementById('fc-container').style.display = 'none';
+        fcBtn.disabled = true;
+        
+        try {
+            const res = await fetch(`${API_BASE}/ask`, {
+                method: "POST", headers: {"Content-Type":"application/json"},
+                body: JSON.stringify({ question: input, mode: "flashcards" })
+            });
+            const data = await res.json();
+            if (data.isJson && data.answer.cards) {
+                currentFlashcards = data.answer.cards;
+                fcIndex = 0;
+                renderFlashcard();
+                document.getElementById('fc-container').style.display = 'block';
+                addXP(10);
+            } else {
+                document.getElementById('fc-loading').innerHTML = "<p style='padding:16px;'>Failed to generate flashcards.</p>";
+            }
+        } catch(e) {
+            document.getElementById('fc-loading').innerHTML = "<p style='padding:16px;'>Network error.</p>";
+        } finally {
+            document.getElementById('fc-loading').style.display = 'none';
+            fcBtn.disabled = false;
+        }
+    });
+    
+    document.getElementById('fc-flip').addEventListener('click', () => {
+        fcShowingFront = !fcShowingFront;
+        const textDiv = document.getElementById('fc-text');
+        textDiv.style.opacity = 0;
+        setTimeout(() => {
+            textDiv.textContent = fcShowingFront ? currentFlashcards[fcIndex].front : currentFlashcards[fcIndex].back;
+            document.getElementById('fc-card').style.background = fcShowingFront ? "var(--card-bg)" : "rgba(128, 0, 0, 0.03)";
+            textDiv.style.opacity = 1;
+        }, 150);
+    });
+    
+    document.getElementById('fc-next').addEventListener('click', () => {
+        if (fcIndex < currentFlashcards.length - 1) {
+            fcIndex++;
+            renderFlashcard();
+        }
+    });
+    
+    document.getElementById('fc-prev').addEventListener('click', () => {
+        if (fcIndex > 0) {
+            fcIndex--;
+            renderFlashcard();
+        }
+    });
+}
+
+function renderFlashcard() {
+    fcShowingFront = true;
+    document.getElementById('fc-progress').textContent = `Card ${fcIndex + 1} of ${currentFlashcards.length}`;
+    const textDiv = document.getElementById('fc-text');
+    textDiv.textContent = currentFlashcards[fcIndex].front;
+    textDiv.style.transition = "opacity 0.15s";
+    document.getElementById('fc-card').style.background = "var(--card-bg)";
+    
+    document.getElementById('fc-prev').disabled = fcIndex === 0;
+    document.getElementById('fc-next').disabled = fcIndex === currentFlashcards.length - 1;
+}
+
+// =========================================
+// ANSWER PRACTICE
+// =========================================
+let apCurrentQuestion = "";
+
+const apBtn = document.getElementById('ap-btn');
+if (apBtn) {
+    apBtn.addEventListener('click', async () => {
+        const topic = document.getElementById('ap-input').value.trim();
+        const diff = document.getElementById('ap-diff').value;
+        if (!topic) return;
+        
+        apBtn.disabled = true;
+        apBtn.textContent = 'Generating...';
+        
+        try {
+            const res = await fetch(`${API_BASE}/ask`, {
+                method: "POST", headers: {"Content-Type":"application/json"},
+                body: JSON.stringify({ question: topic, context: diff, mode: "answer-practice-q" })
+            });
+            const data = await res.json();
+            apCurrentQuestion = data.answer;
+            document.getElementById('ap-question-text').textContent = apCurrentQuestion;
+            document.getElementById('ap-answer-input').value = '';
+            document.getElementById('ap-workspace').style.display = 'block';
+            document.getElementById('ap-feedback').style.display = 'none';
+        } catch(e) {
+            alert('Failed to get question');
+        } finally {
+            apBtn.disabled = false;
+            apBtn.textContent = 'Get Question';
+        }
+    });
+    
+    document.getElementById('ap-submit-btn').addEventListener('click', async () => {
+        const answer = document.getElementById('ap-answer-input').value.trim();
+        if (!answer) return;
+        
+        const subBtn = document.getElementById('ap-submit-btn');
+        subBtn.disabled = true;
+        subBtn.textContent = 'Evaluating...';
+        
+        try {
+            const res = await fetch(`${API_BASE}/ask`, {
+                method: "POST", headers: {"Content-Type":"application/json"},
+                body: JSON.stringify({ question: answer, context: apCurrentQuestion, mode: "answer-practice-eval" })
+            });
+            const data = await res.json();
+            if (data.isJson) {
+                const fb = data.answer;
+                const fbDiv = document.getElementById('ap-feedback');
+                fbDiv.style.display = 'block';
+                fbDiv.innerHTML = `
+                    <div class="dashboard-card" style="border-left: 4px solid var(--primary);">
+                        <div style="font-size: 24px; font-weight: 800; color: var(--primary); margin-bottom: 12px;">Score: ${fb.score}</div>
+                        <p><strong>Correct:</strong> ${fb.correct}</p>
+                        <p style="margin-top:8px;"><strong>Missing:</strong> ${fb.missing}</p>
+                        <div style="margin-top:16px; padding: 12px; background: rgba(34, 197, 94, 0.05); border: 1px solid var(--success); border-radius: 6px;">
+                            <p style="font-size: 12px; color: var(--success); font-weight: bold; margin-bottom: 4px;">Improved Answer Example:</p>
+                            ${fb.improved}
+                        </div>
+                        <p style="margin-top:12px; font-size: 12px; color: var(--text-sec);">${fb.explanation}</p>
+                    </div>
+                `;
+                addXP(15);
+            }
+        } catch(e) {
+            alert('Failed to evaluate');
+        } finally {
+            subBtn.disabled = false;
+            subBtn.textContent = 'Submit for Review';
+        }
+    });
+}
+
+// =========================================
+// MOCK TEST
+// =========================================
+let mtData = null;
+
+const mtBtn = document.getElementById('mt-btn');
+if (mtBtn) {
+    mtBtn.addEventListener('click', async () => {
+        const topic = document.getElementById('mt-input').value.trim();
+        if (!topic) return;
+        
+        document.getElementById('mt-loading').style.display = 'block';
+        document.getElementById('mt-workspace').style.display = 'none';
+        mtBtn.disabled = true;
+        
+        try {
+            const res = await fetch(`${API_BASE}/ask`, {
+                method: "POST", headers: {"Content-Type":"application/json"},
+                body: JSON.stringify({ question: topic, mode: "mock-test-gen" })
+            });
+            const data = await res.json();
+            if (data.isJson) {
+                mtData = data.answer;
+                renderMockTest();
+                document.getElementById('mt-workspace').style.display = 'block';
+                addXP(5);
+            }
+        } catch(e) {
+            document.getElementById('mt-loading').innerHTML = "<p>Network error.</p>";
+        } finally {
+            document.getElementById('mt-loading').style.display = 'none';
+            mtBtn.disabled = false;
+        }
+    });
+}
+
+function renderMockTest() {
+    const ws = document.getElementById('mt-workspace');
+    let html = `<div class="dashboard-card" style="padding: 32px;"><h3 style="font-size: 20px; border-bottom: 1px solid var(--border-color); padding-bottom: 12px; margin-bottom: 24px;">Section 1: Multiple Choice</h3>`;
+    
+    mtData.mcqs.forEach((mcq, idx) => {
+        html += `<div style="margin-bottom: 24px;" class="mt-mcq-item">
+            <p style="font-weight: 600; margin-bottom: 12px;">${idx + 1}. ${mcq.question}</p>
+            <div style="display: flex; flex-direction: column; gap: 8px;">
+                ${mcq.options.map(opt => `
+                    <label style="display: flex; align-items: center; gap: 8px; padding: 10px; border: 1px solid var(--border-color); border-radius: 6px; cursor: pointer;">
+                        <input type="radio" name="mt-mcq-${idx}" value="${opt.letter}" />
+                        ${opt.letter}) ${opt.text}
+                    </label>
+                `).join('')}
+            </div>
+        </div>`;
+    });
+    
+    html += `<h3 style="font-size: 20px; border-bottom: 1px solid var(--border-color); padding-bottom: 12px; margin-bottom: 24px; margin-top: 48px;">Section 2: Short Answer</h3>`;
+    
+    mtData.short_answers.forEach((sa, idx) => {
+        html += `<div style="margin-bottom: 24px;" class="mt-sa-item">
+            <p style="font-weight: 600; margin-bottom: 12px;">${idx + 1}. ${sa.question}</p>
+            <textarea id="mt-sa-${idx}" rows="3" style="width: 100%; border: 1px solid var(--border-color); border-radius: 6px; padding: 12px; font-family: inherit; font-size: 14px; outline: none;"></textarea>
+        </div>`;
+    });
+    
+    html += `<button id="mt-submit-btn" class="primary-btn" style="width: 100%; padding: 14px; font-size: 16px; margin-top: 24px;">Submit Test</button>`;
+    html += `</div><div id="mt-results" class="mt-4" style="display:none;"></div>`;
+    
+    ws.innerHTML = html;
+    
+    document.getElementById('mt-submit-btn').addEventListener('click', evaluateMockTest);
+}
+
+async function evaluateMockTest() {
+    const subBtn = document.getElementById('mt-submit-btn');
+    subBtn.disabled = true;
+    subBtn.textContent = 'Grading Test...';
+    
+    let mcqScore = 0;
+    mtData.mcqs.forEach((mcq, idx) => {
+        const selected = document.querySelector(`input[name="mt-mcq-${idx}"]:checked`);
+        if (selected && selected.value === mcq.correctAnswer) {
+            mcqScore++;
+        }
+    });
+    
+    const shortAnswers = mtData.short_answers.map((sa, idx) => ({
+        question: sa.question,
+        answer: document.getElementById(`mt-sa-${idx}`).value.trim()
+    }));
+    
+    try {
+        const res = await fetch(`${API_BASE}/ask`, {
+            method: "POST", headers: {"Content-Type":"application/json"},
+            body: JSON.stringify({ question: JSON.stringify(shortAnswers), mode: "mock-test-eval" })
+        });
+        const data = await res.json();
+        
+        let html = `<div class="dashboard-card" style="border-left: 4px solid var(--primary);">
+            <div style="font-size: 24px; font-weight: 800; color: var(--primary); margin-bottom: 12px;">MCQ Score: ${mcqScore} / ${mtData.mcqs.length}</div>`;
+            
+        if (data.isJson && data.answer.evaluations) {
+            html += `<h4 style="margin-top: 24px; margin-bottom: 12px;">Short Answer Evaluations:</h4>`;
+            data.answer.evaluations.forEach((ev, idx) => {
+                html += `<div style="margin-bottom: 16px; padding: 12px; background: rgba(128, 0, 0, 0.02); border-radius: 6px;">
+                    <p style="font-weight: 600;">Q: ${shortAnswers[idx].question}</p>
+                    <p style="color: var(--text-sec); margin-top: 4px;">Your Answer: ${shortAnswers[idx].answer || '(No answer)'}</p>
+                    <p style="color: var(--primary); font-weight: 600; margin-top: 8px;">Score: ${ev.score}</p>
+                    <p style="font-size: 12px; margin-top: 4px;">${ev.feedback}</p>
+                </div>`;
+            });
+        }
+        html += `</div>`;
+        document.getElementById('mt-results').innerHTML = html;
+        document.getElementById('mt-results').style.display = 'block';
+        addXP(50);
+        window.scrollTo(0, document.body.scrollHeight);
+    } catch(e) {
+        alert('Failed to grade test');
+    } finally {
+        subBtn.style.display = 'none';
+    }
+}
+
 const iqInput = document.getElementById('iq-file');
 const iqNameDisplay = document.getElementById('iq-file-name');
 const iqBtn = document.getElementById('iq-btn');
@@ -737,101 +1012,106 @@ if (iqInput && iqBtn) {
 // =========================================
 // VOICE TUTOR
 // =========================================
-const vtMicBtn = document.getElementById('vt-mic-btn');
+const vtStartListenBtn = document.getElementById('vt-start-listen-btn');
+const vtStopListenBtn = document.getElementById('vt-stop-listen-btn');
+const vtStopSpeakBtn = document.getElementById('vt-stop-speak-btn');
 const vtStatus = document.getElementById('vt-status');
-const vtInput = document.getElementById('vt-input');
-const vtSendBtn = document.getElementById('vt-send-btn');
 const vtAnswer = document.getElementById('vt-answer');
 
-if (vtMicBtn) {
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    let recognition = null;
-    let isListening = false;
+let vtIsListening = false;
+let vtIsSpeaking = false;
+let recognition = null;
 
+if (vtStartListenBtn) {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (SpeechRecognition) {
         recognition = new SpeechRecognition();
         recognition.continuous = false;
         recognition.interimResults = false;
-        
+
         recognition.onstart = () => {
-            isListening = true;
-            vtStatus.textContent = "Listening... Speak now.";
-            vtMicBtn.style.transform = "scale(1.2)";
-            vtMicBtn.style.boxShadow = "0 0 15px var(--primary)";
+            vtIsListening = true;
+            if(vtStatus) vtStatus.textContent = "Status: Listening...";
+            vtStartListenBtn.style.display = 'none';
+            if(vtStopListenBtn) vtStopListenBtn.style.display = 'flex';
+            if(vtStopSpeakBtn) vtStopSpeakBtn.style.display = 'none';
         };
-        
-        recognition.onresult = (event) => {
+
+        recognition.onresult = async (event) => {
+            vtIsListening = false;
+            if(vtStopListenBtn) vtStopListenBtn.style.display = 'none';
             const transcript = event.results[0][0].transcript;
-            vtInput.value = transcript;
-            vtStatus.textContent = "Click the microphone to start speaking...";
-            vtSendBtn.click();
-        };
-        
-        recognition.onerror = (event) => {
-            vtStatus.textContent = "Error: " + event.error;
-        };
-        
-        recognition.onend = () => {
-            isListening = false;
-            vtMicBtn.style.transform = "scale(1)";
-            vtMicBtn.style.boxShadow = "0 4px 12px rgba(128,0,0,0.2)";
-            if(vtStatus.textContent.includes("Listening")) {
-                vtStatus.textContent = "Click the microphone to start speaking...";
-            }
-        };
-        
-        vtMicBtn.addEventListener('click', () => {
-            if (isListening) {
-                recognition.stop();
-            } else {
-                recognition.start();
-            }
-        });
-    } else {
-        vtStatus.textContent = "Voice recognition is not supported in this browser. You can still type below.";
-        vtMicBtn.style.display = "none";
-    }
-
-    vtSendBtn.addEventListener('click', async () => {
-        const question = vtInput.value.trim();
-        if (!question) return;
-        
-        const origText = vtSendBtn.textContent;
-        vtSendBtn.textContent = 'Thinking...';
-        vtSendBtn.disabled = true;
-        vtAnswer.style.display = 'block';
-        vtAnswer.innerHTML = '<div class="loading-indicator">StudyFlow is thinking...</div>';
-        
-        try {
-            const res = await fetch(`${API_BASE}/ask`, {
-                method: "POST", headers: {"Content-Type":"application/json"},
-                body: JSON.stringify({ question: question, mode: "normal" })
-            });
-            const data = await res.json();
-            displayNormalAnswer(data.answer, vtAnswer);
-            addXP(10);
-            logActivity(`Voice Tutor used`);
+            if(vtStatus) vtStatus.textContent = "Status: Processing...";
+            vtAnswer.style.display = 'block';
+            vtAnswer.innerHTML = `<div class="dashboard-card"><strong>You:</strong> ${transcript}<br><br><div class="loading-indicator">Thinking...</div></div>`;
             
-            // Text to speech
-            if ('speechSynthesis' in window) {
-                // Strip markdown for speaking
-                let plainText = data.answer.replace(/[#*`_]/g, '');
-                const utterance = new SpeechSynthesisUtterance(plainText);
-                speechSynthesis.speak(utterance);
+            try {
+                const res = await fetch(`${API_BASE}/ask`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ question: transcript, mode: 'voice-tutor' })
+                });
+                const data = await res.json();
+                vtAnswer.innerHTML = `<div class="dashboard-card" style="margin-top:20px;"><strong>You:</strong> ${transcript}<br><br><strong>Tutor:</strong> ${marked.parse(data.answer)}</div>`;
+                appendToolControls(vtAnswer, transcript, "voice-tutor");
+                
+                if(vtStatus) vtStatus.textContent = "Status: Speaking...";
+                if(vtStopSpeakBtn) vtStopSpeakBtn.style.display = 'flex';
+                vtIsSpeaking = true;
+                
+                const utterance = new SpeechSynthesisUtterance(data.answer.replace(/[#*`_]/g, ''));
+                utterance.onend = () => {
+                    vtIsSpeaking = false;
+                    if(vtStatus) vtStatus.textContent = "Status: Idle";
+                    if(vtStopSpeakBtn) vtStopSpeakBtn.style.display = 'none';
+                    vtStartListenBtn.style.display = 'flex';
+                };
+                window.speechSynthesis.speak(utterance);
+                if(typeof addXP === 'function') addXP(25);
+                if(typeof logActivity === 'function') logActivity("Voice tutoring session");
+            } catch(e) {
+                if(vtStatus) vtStatus.textContent = "Status: Error";
+                vtAnswer.innerHTML += `<br><span class="error-msg">Connection failed.</span>`;
+                vtStartListenBtn.style.display = 'flex';
             }
-        } catch(e) {
-            vtAnswer.innerHTML = "<p style='padding:16px;'>Network error.</p>";
-        } finally {
-            vtSendBtn.textContent = origText;
-            vtSendBtn.disabled = false;
+        };
+
+        recognition.onerror = (event) => {
+            vtIsListening = false;
+            if(vtStatus) vtStatus.textContent = "Status: Idle";
+            if(vtStopListenBtn) vtStopListenBtn.style.display = 'none';
+            vtStartListenBtn.style.display = 'flex';
+            alert("Microphone error: " + event.error);
+        };
+
+        vtStartListenBtn.addEventListener('click', () => {
+            if(vtIsListening || vtIsSpeaking) return;
+            window.speechSynthesis.cancel();
+            recognition.start();
+        });
+        
+        if (vtStopListenBtn) {
+            vtStopListenBtn.addEventListener('click', () => {
+                if(vtIsListening) {
+                    recognition.stop();
+                    if(vtStatus) vtStatus.textContent = "Status: Processing...";
+                }
+            });
         }
-    });
-
-    vtInput.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') vtSendBtn.click();
-    });
+        
+        if (vtStopSpeakBtn) {
+            vtStopSpeakBtn.addEventListener('click', () => {
+                window.speechSynthesis.cancel();
+                vtIsSpeaking = false;
+                if(vtStatus) vtStatus.textContent = "Status: Idle";
+                vtStopSpeakBtn.style.display = 'none';
+                vtStartListenBtn.style.display = 'flex';
+            });
+        }
+    } else {
+        vtStartListenBtn.addEventListener('click', () => alert("Speech recognition is not supported in your browser."));
+    }
 }
-
 
 // =========================================
 // NOTIFICATIONS EVENT LISTENERS
