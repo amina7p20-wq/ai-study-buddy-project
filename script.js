@@ -480,7 +480,7 @@ async function fetchAIResponse(question, mode, buttonEl, answerEl) {
                 startMCQQuiz(data.answer.questions, question, answerEl);
                 logActivity(`Practiced MCQs on: ${question}`);
                 userData.sessions++;
-                saveData(userData);
+                // saveData(userData);
             } else if (mode === "mcq") {
                 answerEl.innerHTML = "<p style='padding:16px;'>Could not generate the quiz. Please try again.</p>";
             } else {
@@ -643,13 +643,249 @@ if(pdfInput && pdfBtn) {
                 pdfAnswer.innerHTML = `<div class="error-msg"><strong>Error:</strong> ${data.error}</div>`;
             }
         } catch(e) {
+            console.error(e);
             pdfAnswer.innerHTML = "<div class='error-msg'><strong>Connection Error:</strong> Failed to summarize PDF.</div>";
         } finally {
             pdfBtn.disabled = false;
-            pdfBtn.innerHTML = 'Summarize PDF';
+            pdfBtn.style.opacity = '1';
+            pdfBtn.innerHTML = pdfBtn.dataset.originalText || 'Summarize PDF';
         }
     });
 }
+// =========================================
+// INTERACTIVE MCQ SYSTEM
+// =========================================
+
+let currentQuiz = {
+    questions: [],
+    index: 0,
+    score: 0,
+    topic: "",
+    container: null
+};
+
+function startMCQQuiz(questions, topic, container) {
+    currentQuiz.questions = questions;
+    currentQuiz.index = 0;
+    currentQuiz.score = 0;
+    currentQuiz.topic = topic;
+    currentQuiz.container = container;
+    renderMCQQuestion();
+}
+
+function renderMCQQuestion() {
+    const { questions, index, container } = currentQuiz;
+    container.innerHTML = "";
+    
+    if (index >= questions.length) {
+        renderMCQResults();
+        return;
+    }
+    
+    const qData = questions[index];
+    
+    const card = document.createElement("div");
+    card.className = "quiz-card";
+    
+    const progress = document.createElement("div");
+    progress.className = "quiz-progress";
+    progress.textContent = `Question ${index + 1} of ${questions.length}`;
+    
+    const question = document.createElement("h3");
+    question.textContent = qData.question;
+    
+    card.appendChild(progress);
+    card.appendChild(question);
+    
+    const optionsContainer = document.createElement("div");
+    optionsContainer.className = "quiz-options-container";
+    
+    let answered = false;
+    
+    qData.options.forEach(opt => {
+        const btn = document.createElement("button");
+        btn.className = "quiz-option";
+        btn.textContent = `${opt.letter}) ${opt.text}`;
+        
+        btn.addEventListener("click", () => {
+            if (answered) return;
+            answered = true;
+            
+            const isCorrect = (opt.letter === qData.correctAnswer);
+            if (isCorrect) {
+                btn.classList.add("correct");
+                currentQuiz.score++;
+                userData.mcqsSolved++;
+                addXP(5);
+            } else {
+                btn.classList.add("wrong");
+                Array.from(optionsContainer.children).forEach(childBtn => {
+                    if (childBtn.textContent.startsWith(qData.correctAnswer + ")")) {
+                        childBtn.classList.add("correct");
+                    }
+                });
+            }
+            // saveData(userData);
+            
+            const exp = document.createElement("div");
+            exp.className = "quiz-explanation";
+            exp.innerHTML = `<strong>${isCorrect ? '? Correct!' : '? Incorrect.'}</strong> ${qData.explanation}`;
+            card.appendChild(exp);
+            
+            const nextBtn = document.createElement("button");
+            nextBtn.className = "quiz-next-btn";
+            nextBtn.textContent = (index === questions.length - 1) ? "View Results ?" : "Next Question ?";
+            nextBtn.addEventListener("click", () => {
+                currentQuiz.index++;
+                renderMCQQuestion();
+            });
+            card.appendChild(nextBtn);
+        });
+        
+        optionsContainer.appendChild(btn);
+    });
+    
+    card.appendChild(optionsContainer);
+    container.appendChild(card);
+}
+
+function renderMCQResults() {
+    const { questions, score, topic, container } = currentQuiz;
+    const incorrect = questions.length - score;
+    
+    // Track weak topic if bad score
+    if(score < 3) {
+        const exists = userData.weakTopics.find(w => w.topic.toLowerCase() === topic.toLowerCase());
+        if(exists) {
+            exists.attempts++;
+            exists.accuracy = Math.round((exists.attempts > 1 ? (parseInt(exists.accuracy) + (score/5*100))/2 : (score/5*100))) + "%";
+        } else {
+            userData.weakTopics.push({ topic: topic, attempts: 1, accuracy: (score/5*100) + "%" });
+        }
+        // saveData(userData);
+    }
+    
+    container.innerHTML = `
+        <div class="quiz-card" style="text-align: center; padding: 32px 20px;">
+            <h3 style="font-size: 14px; margin-bottom: 8px; color: var(--text-sec); text-transform: uppercase; letter-spacing: 1px;">Your Score</h3>
+            <div style="font-size: 36px; font-weight: 800; color: var(--primary); margin-bottom: 24px;">${score} / ${questions.length}</div>
+            
+            <div style="display: flex; justify-content: center; gap: 24px; margin-bottom: 32px; font-size: 13px;">
+                <div><strong style="color: var(--success);">${score}</strong> Correct</div>
+                <div><strong style="color: var(--error);">${incorrect}</strong> Incorrect</div>
+            </div>
+            
+            <div style="display: flex; justify-content: center; gap: 12px;">
+                <button class="quiz-next-btn" onclick="retryQuiz()">Try Again</button>
+            </div>
+        </div>
+    `;
+}
+
+window.retryQuiz = function() {
+    document.getElementById('mcq-input').value = currentQuiz.topic;
+    document.getElementById('mcq-btn').click();
+};
+
+// =========================================
+// INIT
+// =========================================
+document.addEventListener('DOMContentLoaded', () => {
+    renderDashboard();
+});
+
+// =========================================
+// MATHS SOLVER
+// =========================================
+const msBtn = document.getElementById('ms-btn');
+if (msBtn) {
+    msBtn.addEventListener('click', () => {
+        const input = document.getElementById('ms-input').value.trim();
+        fetchAIResponse(input, 'maths-solver', msBtn, document.getElementById('ms-answer'));
+    });
+}
+
+// =========================================
+// CODE HELPER
+// =========================================
+const chBtn = document.getElementById('ch-btn');
+if (chBtn) {
+    chBtn.addEventListener('click', async () => {
+        const lang = document.getElementById('ch-lang').value.trim();
+        const action = document.getElementById('ch-action').value;
+        const input = document.getElementById('ch-input').value.trim();
+        const answerEl = document.getElementById('ch-answer');
+        
+        if (!input) return;
+        
+        const origText = chBtn.textContent;
+        chBtn.textContent = 'Thinking...';
+        chBtn.disabled = true;
+        answerEl.style.display = 'block';
+        answerEl.innerHTML = '<div class="loading-indicator">StudyFlow is thinking...</div>';
+        
+        try {
+            const res = await fetch(`${API_BASE}/ask`, {
+                method: "POST", headers: {"Content-Type":"application/json"},
+                body: JSON.stringify({ question: input, mode: "code-helper", language: lang, action: action })
+            });
+            const data = await res.json();
+            displayNormalAnswer(data.answer, answerEl);
+            addXP(10);
+        } catch(e) {
+            answerEl.innerHTML = "<p style='padding:16px;'>Network error.</p>";
+        } finally {
+            chBtn.textContent = origText;
+            chBtn.disabled = false;
+        }
+    });
+}
+
+// =========================================
+// ASK MY NOTES
+// =========================================
+let latestNotes = localStorage.getItem('studyFlowLatestNotes') || "";
+if (latestNotes && document.getElementById('ask-notes-status')) {
+    document.getElementById('ask-notes-status').textContent = "Ready to answer questions about your last generated notes.";
+    document.getElementById('ask-notes-status').style.color = "var(--success)";
+}
+
+const amnBtn = document.getElementById('ask-notes-btn');
+if (amnBtn) {
+    amnBtn.addEventListener('click', async () => {
+        const input = document.getElementById('ask-notes-input').value.trim();
+        const answerEl = document.getElementById('ask-notes-answer');
+        
+        if (!input) return;
+        if (!latestNotes) {
+            answerEl.style.display = 'block';
+            answerEl.innerHTML = "<p style='padding:16px;'>Please generate some notes in the AI Notes tab first.</p>";
+            return;
+        }
+        
+        const origText = amnBtn.textContent;
+        amnBtn.textContent = 'Thinking...';
+        amnBtn.disabled = true;
+        answerEl.style.display = 'block';
+        answerEl.innerHTML = '<div class="loading-indicator">Reading your notes...</div>';
+        
+        try {
+            const res = await fetch(`${API_BASE}/ask`, {
+                method: "POST", headers: {"Content-Type":"application/json"},
+                body: JSON.stringify({ question: input, mode: "ask-my-notes", notes: latestNotes })
+            });
+            const data = await res.json();
+            displayNormalAnswer(data.answer, answerEl);
+            addXP(5);
+        } catch(e) {
+            answerEl.innerHTML = "<p style='padding:16px;'>Network error.</p>";
+        } finally {
+            amnBtn.textContent = origText;
+            amnBtn.disabled = false;
+        }
+    });
+}
+
 // =========================================
 // FLASHCARDS
 // =========================================
