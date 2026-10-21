@@ -279,22 +279,35 @@ def summarize_pdf():
     try:
         import io
         import pypdf
-        reader = pypdf.PdfReader(io.BytesIO(file_bytes))
+        reader = pypdf.PdfReader(io.BytesIO(file_bytes), strict=False)
         
+        if reader.is_encrypted:
+            try:
+                reader.decrypt("")
+            except Exception:
+                return jsonify({"error": "This PDF is password-protected. Please upload an unencrypted PDF."}), 400
+
         if len(reader.pages) > 20:
             return jsonify({"error": "PDF is too long. Max limit is 20 pages."}), 400
 
         extracted_text = ""
         for page in reader.pages:
-            text = page.extract_text()
-            if text:
-                extracted_text += text + "\n"
+            try:
+                text = page.extract_text()
+                if text:
+                    extracted_text += text + "\n"
+            except Exception:
+                continue
         
         extracted_text = extracted_text.strip()
         
         if not extracted_text:
             return jsonify({"error": "No readable text found in PDF. Scanned images (OCR) are not currently supported."}), 400
             
+        # Limit text length to prevent timeouts
+        if len(extracted_text) > 15000:
+            extracted_text = extracted_text[:15000] + "\n...[truncated for summary]"
+
         prompt = f"""
 Turn the following extracted PDF content into useful study material.
 
@@ -313,7 +326,7 @@ Extracted PDF content:
             model="gemini-flash-lite-latest",
             contents=prompt
         )
-        return jsonify({"answer": response.text})
+        return jsonify({"answer": response.text, "summary": response.text})
 
     except Exception as e:
         return jsonify({"error": "Failed to process PDF: " + str(e)}), 500

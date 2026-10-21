@@ -599,11 +599,40 @@ if(pdfInput && pdfBtn) {
         pdfNameDisplay.style.color = 'var(--primary)';
         pdfBtn.disabled = false;
         if(pdfClearBtn) pdfClearBtn.style.display = 'block';
+        if(pdfAnswer) {
+            pdfAnswer.innerHTML = '';
+            pdfAnswer.style.display = 'none';
+        }
     };
 
     pdfInput.addEventListener('change', (e) => {
         if(e.target.files.length > 0) handlePdf(e.target.files[0]);
     });
+
+    const pdfDropZone = document.getElementById('pdf-upload-area');
+    if (pdfDropZone) {
+        pdfDropZone.addEventListener('dragover', (e) => { 
+            e.preventDefault(); 
+            pdfDropZone.style.borderColor = 'var(--primary)'; 
+        });
+        pdfDropZone.addEventListener('dragleave', (e) => { 
+            e.preventDefault(); 
+            pdfDropZone.style.borderColor = 'var(--border-color)'; 
+        });
+        pdfDropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            pdfDropZone.style.borderColor = 'var(--border-color)';
+            if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+                const droppedFile = e.dataTransfer.files[0];
+                if (droppedFile.name.toLowerCase().endsWith('.pdf')) {
+                    pdfInput.files = e.dataTransfer.files;
+                    handlePdf(droppedFile);
+                } else {
+                    alert('Please select or drop a valid PDF file.');
+                }
+            }
+        });
+    }
 
     if(pdfClearBtn) {
         pdfClearBtn.addEventListener('click', () => {
@@ -625,7 +654,9 @@ if(pdfInput && pdfBtn) {
         const formData = new FormData();
         formData.append('file', file);
         
+        if(!pdfBtn.dataset.originalText) pdfBtn.dataset.originalText = pdfBtn.innerHTML;
         pdfBtn.disabled = true;
+        pdfBtn.style.opacity = '0.7';
         pdfBtn.innerHTML = 'Summarizing...';
         pdfAnswer.style.display = 'block';
         pdfAnswer.innerHTML = `<div class="loading-indicator">Summarizing PDF...</div>`;
@@ -633,14 +664,15 @@ if(pdfInput && pdfBtn) {
         try {
             const res = await fetch(`${API_BASE}/summarize-pdf`, { method: 'POST', body: formData });
             const data = await res.json();
-            if(data.summary) {
-                pdfAnswer.innerHTML = `<div class="dashboard-card" style="margin-top:20px;">` + marked.parse(data.summary) + `</div>`;
+            const summaryText = data.summary || data.answer;
+            if(res.ok && summaryText) {
+                pdfAnswer.innerHTML = `<div class="dashboard-card" style="margin-top:20px;">` + marked.parse(summaryText) + `</div>`;
                 appendToolControls(pdfAnswer, file.name, "pdf");
-                if(typeof saveToolData === 'function') saveToolData("pdf_summaries", { fileName: file.name, summary: data.summary });
+                if(typeof saveToolData === 'function') saveToolData("pdf_summaries", { fileName: file.name, summary: summaryText });
                 if(typeof addXP === 'function') addXP(30);
                 if(typeof logActivity === 'function') logActivity("Summarized a PDF");
             } else {
-                pdfAnswer.innerHTML = `<div class="error-msg"><strong>Error:</strong> ${data.error}</div>`;
+                pdfAnswer.innerHTML = `<div class="error-msg"><strong>Error:</strong> ${data.error || 'Failed to summarize PDF.'}</div>`;
             }
         } catch(e) {
             console.error(e);
